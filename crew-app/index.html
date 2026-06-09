@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SwachhCity - Crew Portal</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 0;
+      }
+      
+      .navbar {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      
+      .navbar-brand {
+        font-weight: 600;
+        font-size: 1.25rem;
+      }
+      
+      .main-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      
+      .card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+      }
+      
+      .card:hover {
+        transform: translateY(-2px);
+      }
+      
+      .btn-primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        border: none;
+        border-radius: 6px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: all 0.3s;
+      }
+      
+      .btn-primary:hover {
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      }
+      
+      .incident-card {
+        border-left: 4px solid #6366f1;
+        transition: all 0.3s;
+      }
+      
+      .incident-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+      
+      .incident-card.urgent {
+        border-left-color: #dc3545;
+      }
+      
+      .incident-card.high {
+        border-left-color: #ffc107;
+      }
+      
+      .incident-card.medium {
+        border-left-color: #17a2b8;
+      }
+      
+      .incident-card.low {
+        border-left-color: #28a745;
+      }
+      
+      .status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+      
+      .status-pending {
+        background-color: #dc3545;
+        color: white;
+      }
+      
+      .status-assigned {
+        background-color: #ffc107;
+        color: #212529;
+      }
+      
+      .status-in_progress {
+        background-color: #17a2b8;
+        color: white;
+      }
+      
+      .status-completed {
+        background-color: #28a745;
+        color: white;
+      }
+      
+      .priority-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+      
+      .priority-urgent {
+        background-color: #dc3545;
+        color: white;
+      }
+      
+      .priority-high {
+        background-color: #ffc107;
+        color: #212529;
+      }
+      
+      .priority-medium {
+        background-color: #17a2b8;
+        color: white;
+      }
+      
+      .priority-low {
+        background-color: #28a745;
+        color: white;
+      }
+      
+      .incident-photo {
+        max-width: 100px;
+        max-height: 100px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      
+      .map-container {
+        height: 400px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid #e9ecef;
+      }
+      
+      .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      }
+      
+      .login-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        padding: 40px;
+        max-width: 400px;
+        width: 100%;
+      }
+      
+      .alert {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+      
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #6366f1;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+      <div class="login-card">
+        <div class="text-center mb-4">
+          <h2>SwachhCity</h2>
+          <p class="text-muted">Crew Portal</p>
+        </div>
+        
+        <form id="loginForm">
+          <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" placeholder="Enter username" required>
+          </div>
+          
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" placeholder="Enter password" required>
+          </div>
+          
+          <button type="submit" class="btn btn-primary w-100" id="loginBtn">
+            <span id="loginBtnText">Login</span>
+          </button>
+        </form>
+        
+        <div class="mt-3">
+          <div class="card">
+            <div class="card-body">
+              <h6>Crew Login</h6>
+              <small class="text-muted">
+                <strong>Crew:</strong> crew / crew123
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" style="display: none;">
+      <!-- Navigation -->
+      <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">
+            SwachhCity - Crew Portal
+          </a>
+          
+          <div class="navbar-nav ms-auto">
+            <a class="nav-link text-white" href="#" onclick="showSection('incidents')">Incidents</a>
+            <a class="nav-link text-white" href="#" onclick="logout()">Logout</a>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <div class="main-container">
+        <!-- Incidents Section -->
+        <div id="incidentsSection" style="display: block;">
+          <div class="row mb-4">
+            <div class="col-12">
+              <h2>My Assigned Incidents</h2>
+              <p class="text-muted">Manage waste collection incidents assigned to you</p>
+            </div>
+          </div>
+          
+          <!-- Actions Bar -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title">Actions</h5>
+                    <div>
+                      <button class="btn btn-primary me-2" onclick="refreshIncidents()">
+                        Refresh Incidents
+                      </button>
+                      <button class="btn btn-info me-2" onclick="testConnection()">
+                        Test Connection
+                      </button>
+                    </div>
+                    <div>
+                      <h5 class="card-title">Quick Stats</h5>
+                      <div class="d-flex justify-content-between">
+                        <small class="text-muted">Total: <strong id="totalIncidents">0</strong></small>
+                        <small class="text-muted">Assigned: <strong id="assignedIncidents">0</strong></small>
+                        <small class="text-muted">Completed Today: <strong id="completedToday">0</strong></small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          
+          <!-- Incidents List -->
+          <div id="incidentsList">
+            <div class="text-center">
+              <div class="loading-spinner"></div>
+              <p class="mt-2">Loading incidents...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Map Section -->
+        <div id="mapSection" style="display: none;">
+          <div class="row mb-4">
+            <div class="col-12">
+              <h2>🗺️ Live Operations Map</h2>
+              <p class="text-muted">View your current location and assigned incidents</p>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-body p-0">
+                  <iframe 
+                    src="https://www.openstreetmap.org/export/embed.html?bbox=77.1990%2C28.6039%2C77.2190%2C28.6239&layer=mapnik&marker=28.6139%2C77.2090" 
+                    style="border: 0; width: 100%; height: 500px;"
+                    frameborder="0"
+                    allowfullscreen>
+                  </iframe>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row mt-4">
+            <div class="col-12">
+              <div class="alert alert-info">
+                <h5>📍 Map Information</h5>
+                <p class="mb-2">Interactive map showing incident locations in Delhi area. Click on markers for details.</p>
+                <div class="row">
+                  <div class="col-md-4">
+                    <strong>� Illegal Dumping</strong><br>
+                    Sector 15, Main Road<br>
+                    <small>28.6139°N, 77.2090°E</small>
+                  </div>
+                  <div class="col-md-4">
+                    <strong>🟡 Overflowing Bin</strong><br>
+                    Market Area, Block A<br>
+                    <small>28.6239°N, 77.2190°E</small>
+                  </div>
+                  <div class="col-md-4">
+                    <strong>🟢 Construction Debris</strong><br>
+                    Near City Center<br>
+                    <small>28.6039°N, 77.1990°E</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div id="statsSection" style="display: none;">
+          <div class="row mb-4">
+            <div class="col-12">
+              <h2>📊 Performance Statistics</h2>
+              <p class="text-muted">View your collection performance and metrics</p>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-body text-center py-5">
+                  <div class="mb-4">
+                    <div style="font-size: 64px; color: #6366f1;">
+                      📊
+                    </div>
+                  </div>
+                  <h1 class="display-4 fw-bold text-primary">COMING SOON</h1>
+                  <p class="lead text-muted">
+                    Advanced performance analytics and statistics will be available in the next update.
+                  </p>
+                  <div class="mt-4">
+                    <div class="alert alert-info">
+                      <h5 class="alert-heading">🚀 Upcoming Features</h5>
+                      <ul class="text-start">
+                        <li>Real-time performance dashboards</li>
+                        <li>Daily and weekly collection reports</li>
+                        <li>Response time analytics</li>
+                        <li>Efficiency metrics and trends</li>
+                        <li>Category-wise statistics</li>
+                        <li>Exportable reports</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Incident Details Modal -->
+    <div class="modal fade" id="incidentModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Incident Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div id="incidentDetails">
+              <div class="text-center">
+                <div class="spinner-border spinner-border-sm"></div>
+                <p class="mt-2">Loading incident details...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+      // Service URLs
+      const SERVICES = {
+        SHARED_DATA: 'http://localhost:8006',
+        AUTH: 'http://localhost:8005'
+      };
+
+      // Global variables
+      let currentUser = null;
+      let authToken = null;
+      let currentLocation = null;
+      let map = null;
+      let crewMarker = null;
+      let incidentMarkers = [];
+      let currentIncident = null;
+      let allIncidents = [];
+
+      // Initialize app
+      document.addEventListener('DOMContentLoaded', function() {
+        checkAuth();
+        initializeEventListeners();
+      });
+
+      // Check authentication
+      function checkAuth() {
+        authToken = localStorage.getItem('swachhgram_token');
+        const userData = localStorage.getItem('swachhgram_user');
+        
+        if (authToken && userData) {
+          currentUser = JSON.parse(userData);
+          showMainApp();
+        } else {
+          showLogin();
+        }
+      }
+
+      // Show login screen
+      function showLogin() {
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
+      }
+
+      // Show main app
+      function showMainApp() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        
+        // Initialize app features
+        getCurrentLocation();
+        loadIncidents();
+        updateStats();
+        
+        // Auto-refresh incidents every 30 seconds
+        setInterval(loadIncidents, 30000);
+        setInterval(updateStats, 60000);
+      }
+
+      // Initialize event listeners
+      function initializeEventListeners() {
+        // Login form
+        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        
+        // Auto-refresh location every 10 seconds
+        setInterval(() => {
+          if (currentUser) {
+            getCurrentLocation();
+          }
+        }, 10000);
+      }
+
+      // Handle login
+      async function handleLogin(event) {
+        event.preventDefault();
+        
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        
+        const loginBtn = document.getElementById('loginBtn');
+        const originalText = loginBtn.textContent;
+        
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...';
+
+        try {
+          // For demo, we'll use simple authentication
+          if (username === 'crew' && password === 'crew123') {
+            currentUser = {
+              id: 'crew-001',
+              username: 'crew',
+              name: 'Collection Crew',
+              role: 'crew'
+            };
+            authToken = 'demo-token';
+            
+            localStorage.setItem('swachhgram_token', authToken);
+            localStorage.setItem('swachhgram_user', JSON.stringify(currentUser));
+            
+            showMainApp();
+            showAlert('Login successful!', 'success');
+          } else {
+            showAlert('Invalid credentials. Use: crew / crew123', 'danger');
+          }
+        } catch (error) {
+          console.error('Login error:', error);
+          showAlert('Login failed. Please try again.', 'danger');
+        } finally {
+          loginBtn.disabled = false;
+          loginBtn.textContent = originalText;
+        }
+      }
+
+      // Show section
+      function showSection(section) {
+        // Simple direct approach
+        document.getElementById('incidentsSection').style.display = 'none';
+        document.getElementById('mapSection').style.display = 'none';
+        document.getElementById('statsSection').style.display = 'none';
+        
+        if (section === 'incidents') {
+          document.getElementById('incidentsSection').style.display = 'block';
+        } else if (section === 'map') {
+          document.getElementById('mapSection').style.display = 'block';
+        } else if (section === 'stats') {
+          document.getElementById('statsSection').style.display = 'block';
+        }
+      }
+
+      // Get current location
+      function getCurrentLocation() {
+        const gpsIndicator = document.getElementById('crewGpsIndicator');
+        const gpsStatus = document.getElementById('crewGpsStatus');
+        const gpsSpinner = document.getElementById('crewGpsSpinner');
+        
+        if (!gpsIndicator || !gpsStatus || !gpsSpinner) return;
+        
+        gpsIndicator.className = 'gps-indicator gps-warning';
+        gpsStatus.textContent = 'Getting location...';
+        gpsSpinner.style.display = 'inline-block';
+        
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              currentLocation = {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy
+              };
+              
+              gpsIndicator.className = 'gps-indicator gps-success';
+              gpsStatus.textContent = 'Location accurate';
+              gpsSpinner.style.display = 'none';
+              
+              updateMapMarkers();
+            },
+            (error) => {
+              gpsIndicator.className = 'gps-indicator gps-error';
+              gpsStatus.textContent = 'Location unavailable';
+              gpsSpinner.style.display = 'none';
+            }
+          );
+        } else {
+          gpsIndicator.className = 'gps-indicator gps-error';
+          gpsStatus.textContent = 'GPS not supported';
+          gpsSpinner.style.display = 'none';
+        }
+      }
+
+      // Load incidents
+      async function loadIncidents() {
+        const container = document.getElementById('incidentsList');
+        
+        if (!container) return;
+        
+        // Show loading
+        container.innerHTML = `
+          <div class="text-center">
+            <div class="loading-spinner"></div>
+            <p class="mt-2">Loading incidents...</p>
+          </div>
+        `;
+        
+        try {
+          console.log('Loading incidents for crew:', currentUser.id);
+          console.log('Requesting from:', `${SERVICES.SHARED_DATA}/crews/${currentUser.id}/incidents`);
+          
+          // Get incidents from shared data server
+          const response = await fetch(`${SERVICES.SHARED_DATA}/crews/${currentUser.id}/incidents`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+          
+          console.log('Response status:', response.status);
+          console.log('Response ok:', response.ok);
+          
+          const data = await response.json();
+          console.log('Response data:', data);
+          
+          if (response.ok) {
+            const allIncidentsData = data.incidents || [];
+            allIncidents = allIncidentsData; // Store globally for navigation
+            const myIncidents = allIncidentsData;
+            
+            if (myIncidents.length === 0) {
+              container.innerHTML = '<div class="alert alert-info"><h5>No Assigned Incidents</h5><p>No incidents are currently assigned to your crew (<strong>' + currentUser.name + '</strong>).</p><p>Please have the admin assign incidents to your crew using the admin dashboard.</p><div class="mt-3"><button class="btn btn-primary" onclick="refreshIncidents()">Refresh Incidents</button></div></div>';
+              return;
+            }
+            
+            // Display incidents
+            const incidentsHtml = myIncidents.map(incident => `
+              <div class="card incident-card ${incident.status} priority-${incident.severity || 'medium'} mb-3">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-4">
+                      ${incident.photo_url ? `<img src="${incident.photo_url}" class="incident-photo" alt="Incident photo">` : 
+                        '<div class="text-muted p-3 bg-light rounded">No photo available</div>'}
+                    </div>
+                    <div class="col-md-8">
+                      <h5 class="card-title">${incident.id}</h5>
+                      <p class="card-text">${incident.description}</p>
+                      
+                      <div class="incident-details">
+                        <div class="row">
+                          <div class="col-md-6">
+                            <strong>Category:</strong> ${incident.category}<br>
+                            <strong>Priority:</strong> <span class="priority-badge priority-${incident.severity || 'medium'}">${incident.severity || 'medium'}</span><br>
+                            <strong>Status:</strong> <span class="status-badge status-${incident.status}">${incident.status.replace('_', ' ')}</span>
+                          </div>
+                          <div class="col-md-6">
+                            <strong>Location:</strong><br>
+                            <small>${incident.location && incident.location.latitude ? incident.location.latitude.toFixed(6) : 'N/A'}, ${incident.location && incident.location.longitude ? incident.location.longitude.toFixed(6) : 'N/A'}</small><br>
+                            <strong>Accuracy:</strong> ${incident.location && incident.location.accuracy ? incident.location.accuracy.toFixed(1) : 'N/A'}m
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="location-info">
+                        <small class="text-muted">
+                          <i class="bi bi-clock"></i> ${new Date(incident.created_at).toLocaleString()}
+                          ${incident.assigned_at ? `<br><i class="bi bi-person"></i> Assigned: ${new Date(incident.assigned_at).toLocaleString()}` : ''}
+                        </small>
+                      </div>
+                      
+                      <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-primary" onclick="viewIncident('${incident.id}')">
+                          View Details
+                        </button>
+                        <button class="btn btn-sm btn-success" onclick="startWork('${incident.id}')" ${incident.status === 'in_progress' || incident.status === 'completed' ? 'disabled' : ''}>
+                          ${incident.status === 'in_progress' ? 'In Progress' : incident.status === 'completed' ? 'Completed' : 'Start Work'}
+                        </button>
+                        <button class="btn btn-sm btn-warning" onclick="completeWork('${incident.id}')" ${incident.status !== 'in_progress' ? 'disabled' : ''}>
+                          Complete
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" onclick="navigateToIncident('${incident.id}')">
+                          Navigate
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `).join('');
+            
+            container.innerHTML = incidentsHtml;
+          } else {
+            container.innerHTML = `<div class="alert alert-danger"><h6>Connection Error</h6><p>Failed to load incidents. Status: ${response.status}</p><p>Please check if the shared data server is running on ${SERVICES.SHARED_DATA}</p></div>`;
+          }
+        } catch (error) {
+          console.error('Load incidents error:', error);
+          container.innerHTML = `<div class="alert alert-danger"><h6>Network Error</h6><p>Failed to load incidents: ${error.message}</p><p>Please check your internet connection and try again.</p></div>`;
+        }
+      }
+
+      // Test connection
+      async function testConnection() {
+        try {
+          const response = await fetch(SERVICES.SHARED_DATA + '/');
+          if (response.ok) {
+            showAlert('Connection to shared data server successful!', 'success');
+          } else {
+            showAlert('Failed to connect to shared data server', 'error');
+          }
+        } catch (error) {
+          showAlert(`Connection error: ${error.message}`, 'error');
+        }
+      }
+
+      // Refresh incidents
+      function refreshIncidents() {
+        loadIncidents();
+        showAlert('Incidents refreshed', 'success');
+      }
+
+      // Update statistics
+      async function updateStats() {
+        try {
+          // Get all incidents
+          const response = await fetch(`${SERVICES.SHARED_DATA}/incidents`);
+          const data = await response.json();
+          
+          if (response.ok) {
+            const allIncidents = data.incidents;
+            const myIncidents = allIncidents.filter(inc => inc.assigned_to === currentUser.id);
+            
+            const completedToday = myIncidents.filter(inc => 
+              inc.status === 'completed' && 
+              new Date(inc.completed_at).toDateString() === new Date().toDateString()
+            ).length;
+            
+            const totalIncidents = allIncidents.length;
+            const assignedIncidents = myIncidents.length;
+            
+            // Calculate average time (mock data)
+            const avgTime = 25; // minutes
+            
+            const totalIncidentsEl = document.getElementById('totalIncidents');
+            const assignedIncidentsEl = document.getElementById('assignedIncidents');
+            const completedTodayEl = document.getElementById('completedToday');
+            const avgTimeEl = document.getElementById('avgTime');
+            
+            if (totalIncidentsEl) totalIncidentsEl.textContent = totalIncidents;
+            if (assignedIncidentsEl) assignedIncidentsEl.textContent = assignedIncidents;
+            if (completedTodayEl) completedTodayEl.textContent = completedToday;
+            if (avgTimeEl) avgTimeEl.textContent = avgTime + 'm';
+          }
+        } catch (error) {
+          console.error('Update stats error:', error);
+        }
+      }
+
+      // Initialize map
+      function initializeMap() {
+        if (!map && currentLocation) {
+          map = L.map('liveMap').setView([currentLocation.latitude, currentLocation.longitude], 13);
+          
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+          }).addTo(map);
+          
+          updateMapMarkers();
+        }
+      }
+
+      // Update map markers
+      function updateMapMarkers() {
+        if (!map) return;
+        
+        // Remove existing markers
+        incidentMarkers.forEach(marker => map.removeLayer(marker));
+        incidentMarkers = [];
+        
+        // Add crew marker
+        if (currentLocation) {
+          crewMarker = L.marker([currentLocation.latitude, currentLocation.longitude], {
+            icon: L.divIcon({
+              html: '<div style="background: #6366f1; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px;">C</div>',
+              className: 'crew-marker',
+              iconSize: [30, 30]
+            })
+          })
+            .addTo(map)
+            .bindPopup(`<b>${currentUser.name}</b><br>Status: Active`);
+        }
+      }
+
+      // View incident details
+      async function viewIncident(incidentId) {
+        currentIncident = incidentId;
+        
+        try {
+          const response = await fetch(`${SERVICES.SHARED_DATA}/incidents/${incidentId}`);
+          const incident = await response.json();
+          
+          if (response.ok) {
+            // Show incident details in modal
+            const modal = new bootstrap.Modal(document.getElementById('incidentModal'));
+            const detailsHtml = `
+              <div class="row">
+                <div class="col-md-6">
+                  ${incident.photo_url ? `<img src="${incident.photo_url}" class="img-fluid rounded" alt="Incident photo">` : 
+                    '<div class="text-muted p-3 bg-light rounded">No photo available</div>'}
+                </div>
+                <div class="col-md-6">
+                  <h6>${incident.id}</h6>
+                  <p><strong>Category:</strong> ${incident.category}</p>
+                  <p><strong>Description:</strong> ${incident.description}</p>
+                  <p><strong>Priority:</strong> ${incident.severity}</p>
+                  <p><strong>Status:</strong> ${incident.status.replace('_', ' ')}</p>
+                  <p><strong>Location:</strong> ${incident.location && incident.location.latitude ? incident.location.latitude.toFixed(6) : 'N/A'}, ${incident.location && incident.location.longitude ? incident.location.longitude.toFixed(6) : 'N/A'}</p>
+                  <p><strong>Reported:</strong> ${new Date(incident.created_at).toLocaleString()}</p>
+                  ${incident.assigned_at ? `<p><strong>Assigned:</strong> ${new Date(incident.assigned_at).toLocaleString()}</p>` : ''}
+                </div>
+              </div>
+            `;
+            
+            document.getElementById('incidentDetails').innerHTML = detailsHtml;
+            modal.show();
+          } else {
+            showAlert('Failed to load incident details', 'error');
+          }
+        } catch (error) {
+          console.error('View incident error:', error);
+          showAlert('Failed to load incident details', 'error');
+        }
+      }
+
+      // Start work on incident
+      async function startWork(incidentId) {
+        try {
+          // Update incident status to "in_progress"
+          const response = await fetch(`${SERVICES.SHARED_DATA}/incidents/${incidentId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              status: 'in_progress',
+              started_at: new Date().toISOString()
+            })
+          });
+          
+          if (response.ok) {
+            showAlert(`Started work on ${incidentId}`, 'success');
+            loadIncidents(); // Refresh list
+          } else {
+            showAlert('Failed to start work', 'error');
+          }
+        } catch (error) {
+          console.error('Start work error:', error);
+          showAlert('Failed to start work', 'error');
+        }
+      }
+
+      // Complete work on incident
+      async function completeWork(incidentId) {
+        try {
+          // Update incident status to "completed"
+          const response = await fetch(`${SERVICES.SHARED_DATA}/incidents/${incidentId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              status: 'completed',
+              completed_at: new Date().toISOString()
+            })
+          });
+          
+          if (response.ok) {
+            showAlert(`Completed work on ${incidentId}`, 'success');
+            loadIncidents(); // Refresh list
+          } else {
+            showAlert('Failed to complete work', 'error');
+          }
+        } catch (error) {
+          console.error('Complete work error:', error);
+          showAlert('Failed to complete work', 'error');
+        }
+      }
+
+      // Navigate to incident
+      function navigateToIncident(incidentId) {
+        // Set default current location if not available
+        const originLat = currentLocation ? currentLocation.latitude : 28.6139;
+        const originLng = currentLocation ? currentLocation.longitude : 77.2090;
+        
+        const incident = allIncidents.find(inc => inc.id === incidentId);
+        if (incident && incident.location && incident.location.latitude && incident.location.longitude) {
+          // Open Google Maps with directions
+          const destinationLat = incident.location.latitude;
+          const destinationLng = incident.location.longitude;
+          
+          const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destinationLat},${destinationLng}&travelmode=driving`;
+          
+          // Open in new tab
+          window.open(googleMapsUrl, '_blank');
+          
+          showAlert(`Navigation opened for incident at ${incident.description}`, 'success');
+        } else {
+          // Use default coordinates for demo if incident location not available
+          const destinationLat = 28.6239;
+          const destinationLng = 77.2190;
+          
+          const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${originLat},${originLng}&destination=${destinationLat},${destinationLng}&travelmode=driving`;
+          
+          // Open in new tab
+          window.open(googleMapsUrl, '_blank');
+          
+          showAlert(`Navigation opened for incident ${incidentId}`, 'success');
+        }
+      }
+
+      // Initialize charts
+      function initializeCharts() {
+        // Performance chart
+        const performanceCtx = document.getElementById('performanceChart');
+        if (performanceCtx) {
+          new Chart(performanceCtx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+              labels: ['Completed', 'In Progress', 'Pending'],
+              datasets: [{
+                data: [12, 3, 5],
+                backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false
+            }
+          });
+        }
+
+        // Trends chart
+        const trendsCtx = document.getElementById('trendsChart');
+        if (trendsCtx) {
+          new Chart(trendsCtx.getContext('2d'), {
+            type: 'line',
+            data: {
+              labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+              datasets: [{
+                label: 'Collections',
+                data: [8, 12, 10, 15, 18, 14, 9],
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                tension: 0.1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false
+            }
+          });
+        }
+      }
+
+      // Initialize map (simple HTML version)
+      function initializeMap() {
+        console.log('Map section loaded - showing incident locations');
+        // Map is now displayed using HTML cards - no external libraries needed
+      }
+
+      // Initialize charts (simple HTML version)
+      function initializeCharts() {
+        console.log('Statistics section loaded - showing performance data');
+        // Charts are now displayed using HTML/CSS - no external libraries needed
+        
+        // Animate stats numbers
+        animateValue('todayCollections', 0, 12, 2000);
+        animateValue('avgResponseTime', 0, 24, 2000);
+        animateValue('efficiencyScore', 0, 87, 2000);
+        animateValue('weekTotal', 0, 68, 2000);
+      }
+
+      // Animate number counting
+      function animateValue(id, start, end, duration) {
+        const element = document.getElementById(id);
+        if (!element) return;
+        
+        const range = end - start;
+        const increment = range / (duration / 16);
+        let current = start;
+        
+        const timer = setInterval(() => {
+          current += increment;
+          if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+            current = end;
+            clearInterval(timer);
+          }
+          
+          if (id === 'efficiencyScore') {
+            element.textContent = Math.round(current) + '%';
+          } else if (id === 'avgResponseTime') {
+            element.textContent = Math.round(current) + ' min';
+          } else {
+            element.textContent = Math.round(current);
+          }
+        }, 16);
+      }
+
+      // Show map preview
+      function showMapPreview() {
+        showAlert('Map preview would open here showing real-time GPS tracking and incident locations', 'info');
+      }
+
+      // Update crew location
+      function updateCrewLocation() {
+        const gpsIndicator = document.getElementById('crewGpsIndicator');
+        const gpsStatus = document.getElementById('crewGpsStatus');
+        const gpsSpinner = document.getElementById('crewGpsSpinner');
+        
+        if (gpsSpinner) gpsSpinner.style.display = 'block';
+        if (gpsStatus) gpsStatus.textContent = 'Updating location...';
+        
+        // Simulate GPS update
+        setTimeout(() => {
+          if (gpsSpinner) gpsSpinner.style.display = 'none';
+          if (gpsStatus) gpsStatus.textContent = 'Location Updated';
+          if (gpsIndicator) {
+            gpsIndicator.className = 'gps-indicator gps-success';
+          }
+          
+          // Update map if available
+          if (map && currentLocation) {
+            if (crewMarker) {
+              crewMarker.setLatLng([currentLocation.latitude, currentLocation.longitude]);
+            }
+          }
+        }, 2000);
+      }
+
+      // Logout
+      function logout() {
+        localStorage.removeItem('swachhgram_token');
+        localStorage.removeItem('swachhgram_user');
+        authToken = null;
+        currentUser = null;
+        showLogin();
+        showAlert('Logged out successfully', 'info');
+      }
+
+      // Show alert
+      function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+        alertDiv.innerHTML = `
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(alertDiv);
+        
+        setTimeout(() => {
+          alertDiv.remove();
+        }, 5000);
+      }
+    </script>
+  </body>
+</html>

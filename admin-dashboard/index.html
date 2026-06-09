@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SwachhCity - Municipal Dashboard</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f8f9fa;
+        margin: 0;
+        padding: 0;
+      }
+      
+      .navbar {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      
+      .navbar-brand {
+        font-weight: 600;
+        font-size: 1.25rem;
+      }
+      
+      .main-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      
+      .card {
+        border: none;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+      }
+      
+      .card:hover {
+        transform: translateY(-2px);
+      }
+      
+      .btn-primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        border: none;
+        border-radius: 6px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: all 0.3s;
+      }
+      
+      .btn-primary:hover {
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      }
+      
+      .metric-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        transition: transform 0.3s;
+      }
+      
+      .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      }
+      
+      .metric-card.incidents {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      }
+      
+      .metric-card.collections {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      }
+      
+      .metric-card.crew {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      }
+      
+      .metric-card.sla {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+      }
+      
+      .map-container {
+        height: 500px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid #e9ecef;
+      }
+      
+      .chart-container {
+        position: relative;
+        height: 300px;
+      }
+      
+      .incident-card {
+        border-left: 4px solid #6366f1;
+        transition: all 0.3s;
+      }
+      
+      .incident-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+      
+      .incident-card.urgent {
+        border-left-color: #dc3545;
+      }
+      
+      .incident-card.high {
+        border-left-color: #ffc107;
+      }
+      
+      .incident-card.medium {
+        border-left-color: #17a2b8;
+      }
+      
+      .incident-card.low {
+        border-left-color: #28a745;
+      }
+      
+      .status-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+      
+      .status-pending {
+        background-color: #dc3545;
+        color: white;
+      }
+      
+      .status-assigned {
+        background-color: #ffc107;
+        color: #212529;
+      }
+      
+      .status-in-progress {
+        background-color: #17a2b8;
+        color: white;
+      }
+      
+      .status-completed {
+        background-color: #28a745;
+        color: white;
+      }
+      
+      .priority-badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+      
+      .priority-urgent {
+        background-color: #dc3545;
+        color: white;
+      }
+      
+      .priority-high {
+        background-color: #ffc107;
+        color: #212529;
+      }
+      
+      .priority-medium {
+        background-color: #17a2b8;
+        color: white;
+      }
+      
+      .priority-low {
+        background-color: #28a745;
+        color: white;
+      }
+      
+      .crew-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+      }
+      
+      .crew-online {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      
+      .crew-offline {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      
+      .crew-busy {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+      
+      .sla-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+      
+      .sla-good {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      
+      .sla-warning {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+      
+      .sla-critical {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #6366f1;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      .alert {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+      
+      .metrics-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+      
+      .metrics-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+      }
+      
+      .filter-section {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      
+      .real-time-indicator {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        background-color: #d4edda;
+        color: #155724;
+      }
+      
+      .real-time-indicator .pulse {
+        width: 8px;
+        height: 8px;
+        background-color: #28a745;
+        border-radius: 50%;
+        margin-right: 6px;
+        animation: pulse 2s infinite;
+      }
+      
+      @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.2); opacity: 0.7; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      
+      .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      }
+      
+      .login-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        padding: 40px;
+        max-width: 400px;
+        width: 100%;
+      }
+      
+      .incident-photo {
+        max-width: 100px;
+        max-height: 100px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      
+      .crew-card {
+        border-left: 4px solid #6366f1;
+        transition: all 0.3s;
+      }
+      
+      .crew-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+      <div class="login-card">
+        <div class="text-center mb-4">
+          <h2>SwachhCity</h2>
+          <p class="text-muted">Municipal Dashboard</p>
+        </div>
+        
+        <form id="loginForm">
+          <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" placeholder="Enter username" required>
+          </div>
+          
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" placeholder="Enter password" required>
+          </div>
+          
+          <button type="submit" class="btn btn-primary w-100" id="loginBtn">
+            <span id="loginBtnText">Login</span>
+          </button>
+        </form>
+        
+        <div class="mt-3">
+          <div class="card">
+            <div class="card-body">
+              <h6>Admin Login</h6>
+              <small class="text-muted">
+                <strong>Admin:</strong> admin / admin123<br>
+                <strong>Supervisor:</strong> supervisor / sup123
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" style="display: none;">
+      <!-- Navigation -->
+      <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">
+            SwachhCity - Municipal Dashboard
+          </a>
+          
+          <div class="navbar-nav ms-auto">
+            <div class="real-time-indicator me-3">
+              <div class="pulse"></div>
+              Live
+            </div>
+            <a class="nav-link text-white" href="#" onclick="showSection('overview')">Overview</a>
+            <a class="nav-link text-white" href="#" onclick="showSection('incidents')">Incidents</a>
+            <a class="nav-link text-white" href="#" onclick="showSection('crew')">Crew</a>
+            <a class="nav-link text-white" href="#" onclick="showSection('analytics')">Analytics</a>
+            <a class="nav-link text-white" href="#" onclick="logout()">Logout</a>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Main Content -->
+      <div class="main-container">
+        <!-- Overview Section -->
+        <div id="overviewSection">
+          <div class="row mb-4">
+            <div class="col-12">
+              <h2>Municipal Command Dashboard</h2>
+              <p class="text-muted">Real-time monitoring and management of waste collection operations</p>
+            </div>
+          </div>
+          
+          <!-- Metrics Cards -->
+          <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+              <div class="metric-card incidents">
+                <div class="metrics-number" id="totalIncidents">0</div>
+                <div class="metrics-label">Total Incidents</div>
+                <small>Today</small>
+              </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+              <div class="metric-card collections">
+                <div class="metrics-number" id="totalCollections">0</div>
+                <div class="metrics-label">Collections</div>
+                <small>Completed Today</small>
+              </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+              <div class="metric-card crew">
+                <div class="metrics-number" id="activeCrew">0</div>
+                <div class="metrics-label">Active Crew</div>
+                <small>Currently Working</small>
+              </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+              <div class="metric-card sla">
+                <div class="metrics-number" id="slaCompliance">0%</div>
+                <div class="metrics-label">SLA Compliance</div>
+                <small>6-hour target</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Map and Activity -->
+          <div class="row">
+            <div class="col-md-8 mb-4">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Live Operations Map</h5>
+                  <div class="map-container" id="liveMap"></div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Recent Activity</h5>
+                  <div id="recentActivity">
+                    <div class="text-center">
+                      <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                      </div>
+                      <p class="mt-2">Loading activity...</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts -->
+          <div class="row">
+            <div class="col-md-6 mb-4">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Incident Trends</h5>
+                  <div class="chart-container">
+                    <canvas id="incidentTrendsChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+              <div class="card">
+                <div class="card-body">
+                  <h5 class="card-title">Collection Performance</h5>
+                  <div class="chart-container">
+                    <canvas id="collectionPerformanceChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Incidents Section -->
+        <div id="incidentsSection" style="display: none;">
+          <div class="row mb-4">
+            <div class="col-12">
+              <h2>Incident Management</h2>
+              <p class="text-muted">Monitor and manage all waste collection incidents</p>
+            </div>
+          </div>
+          
+          <!-- Actions Bar -->
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-8">
+                      <h5 class="card-title">Actions</h5>
+                      <button class="btn btn-primary me-2" onclick="refreshIncidents()">
+                        Refresh Incidents
+                      </button>
+                      <button class="btn btn-success me-2" onclick="showAddCrewModal()">
+                        Add New Crew
+                      </button>
+                      <button class="btn btn-warning me-2" onclick="testIncidentsDirect()">
+                        Test Incidents Direct
+                      </button>
+                    </div>
+                    <div class="col-md-4">
+                      <h5 class="card-title">Quick Stats</h5>
+                      <div class="d-flex justify-content-between">
+                        <small class="text-muted">Total: <strong id="quickTotal">0</strong></small>
+                        <small class="text-muted">Pending: <strong id="quickPending">0</strong></small>
+                        <small class="text-muted">Assigned: <strong id="quickAssigned">0</strong></small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Filters -->
+          <div class="filter-section">
+            <div class="row">
+              <div class="col-md-3">
+                <select class="form-select" id="statusFilter">
+                  <option value="">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="assigned">Assigned</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+              
+              <div class="col-md-3">
+                <select class="form-select" id="priorityFilter">
+                  <option value="">All Priority</option>
+                  <option value="urgent">Urgent</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+              
+              <div class="col-md-3">
+                <select class="form-select" id="categoryFilter">
+                  <option value="">All Categories</option>
+                  <option value="black_spot">Black Spot</option>
+                  <option value="overflowing_bin">Overflowing Bin</option>
+                  <option value="illegal_dumping">Illegal Dumping</option>
+                  <option value="street_cleaning">Street Cleaning</option>
+                </select>
+              </div>
+              
+              <div class="col-md-3">
+                <button class="btn btn-primary w-100" onclick="applyFilters()">Apply Filters</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Incidents List -->
+          <div class="mb-3">
+            <button class="btn btn-primary" onclick="loadIncidents()">
+              <i class="bi bi-arrow-clockwise"></i> Refresh Incidents
+            </button>
+            <small class="text-muted ms-2">Click to manually reload incidents from server</small>
+          </div>
+          <div id="incidentsList">
+            <div class="text-center">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2">Loading incidents...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Crew Section -->
+        <div id="crewSection" style="display: none;">
+          <div class="row mb-4">
+            <div class="col-12">
+              <h2>Crew Management</h2>
+              <p class="text-muted">Monitor and manage waste collection crew members</p>
+            </div>
+          </div>
+          
+          <div class="row mb-4">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-body">
+                  <button class="btn btn-success" onclick="showAddCrewModal()">
+                    <i class="bi bi-plus-circle"></i> Add New Crew
+                  </button>
+                </div>
+              </div>
+            </div>
+          
+          <div id="crewList">
+            <div class="text-center">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2">Loading crew data...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analytics Section -->
+        <div id="analyticsSection" style="display: none;">
+          <div class="row mb-4">
+            <div class="col-12">
+              <h2>Analytics & Reports</h2>
+              <p class="text-muted">Comprehensive analytics and performance reports</p>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-body text-center py-5">
+                  <div class="mb-4">
+                    <div style="font-size: 64px; color: #ccc;">
+                      📊
+                    </div>
+                  </div>
+                  <h4 class="text-muted">Advanced Analytics Coming Soon</h4>
+                  <p class="text-muted">
+                    Comprehensive analytics dashboards, performance reports, and data visualization will be available in the next update.
+                  </p>
+                  <div class="mt-4">
+                    <div class="row">
+                      <div class="col-md-3 mb-3">
+                        <div class="card border-light">
+                          <div class="card-body">
+                            <h6>📈 Performance Metrics</h6>
+                            <small class="text-muted">Crew efficiency and response times</small>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-3 mb-3">
+                        <div class="card border-light">
+                          <div class="card-body">
+                            <h6>📊 Incident Analytics</h6>
+                            <small class="text-muted">Trends and patterns analysis</small>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-3 mb-3">
+                        <div class="card border-light">
+                          <div class="card-body">
+                            <h6>🎯 SLA Reports</h6>
+                            <small class="text-muted">Service level compliance tracking</small>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-3 mb-3">
+                        <div class="card border-light">
+                          <div class="card-body">
+                            <h6>📋 Custom Reports</h6>
+                            <small class="text-muted">Exportable analytics reports</small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-4">
+                    <div class="alert alert-info">
+                      <h6>🚀 Upcoming Features</h6>
+                      <ul class="mb-0 text-start">
+                        <li>Real-time performance dashboards</li>
+                        <li>Historical data analysis and trends</li>
+                        <li>Crew performance comparison</li>
+                        <li>Waste category distribution charts</li>
+                        <li>Response time analytics</li>
+                        <li>Exportable PDF and Excel reports</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Incident Assignment Modal -->
+    <div class="modal fade" id="assignmentModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Assign Incident</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="assignmentForm">
+              <div class="mb-3">
+                <label class="form-label">Incident ID</label>
+                <input type="text" class="form-control" id="assignmentIncidentId" readonly>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Select Crew</label>
+                <select class="form-select" id="crewSelect" required>
+                  <option value="">Choose crew member...</option>
+                </select>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Priority</label>
+                <select class="form-select" id="assignmentPriority" required>
+                  <option value="urgent">Urgent</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Notes</label>
+                <textarea class="form-control" rows="3" placeholder="Add assignment notes..."></textarea>
+              </div>
+              
+              <button type="submit" class="btn btn-primary w-100">Assign Incident</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Crew Modal -->
+    <div class="modal fade" id="addCrewModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Add New Crew</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <form id="addCrewForm">
+              <div class="mb-3">
+                <label class="form-label">Crew Name</label>
+                <input type="text" class="form-control" id="crewName" placeholder="Enter crew name" required>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Crew ID</label>
+                <input type="text" class="form-control" id="crewId" placeholder="Enter crew ID (e.g., crew-004)" required>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Initial Status</label>
+                <select class="form-select" id="crewStatus" required>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="on_leave">On Leave</option>
+                </select>
+              </div>
+              
+              <div class="mb-3">
+                <label class="form-label">Contact Number</label>
+                <input type="tel" class="form-control" id="crewContact" placeholder="Enter contact number">
+              </div>
+              
+              <button type="submit" class="btn btn-success w-100">Add Crew</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+      // Service URLs
+      const SERVICES = {
+        SHARED_DATA: 'http://localhost:8006',
+        AUTH: 'http://localhost:8005'
+      };
+
+      // Global variables
+      let currentUser = null;
+      let authToken = null;
+      let map = null;
+      let crewMarkers = [];
+      let incidentMarkers = [];
+      let currentIncidentId = null;
+      let allIncidents = [];
+      let allCrews = [];
+
+      // Initialize app
+      document.addEventListener('DOMContentLoaded', function() {
+        checkAuth();
+        initializeEventListeners();
+      });
+
+      // Check authentication
+      function checkAuth() {
+        authToken = localStorage.getItem('swachhgram_token');
+        const userData = localStorage.getItem('swachhgram_user');
+        
+        if (authToken && userData) {
+          currentUser = JSON.parse(userData);
+          if (currentUser.role !== 'admin' && currentUser.role !== 'ward_supervisor') {
+            logout();
+            return;
+          }
+          showMainApp();
+        } else {
+          showLogin();
+        }
+      }
+
+      // Show login screen
+      function showLogin() {
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
+      }
+
+      // Show main app
+      function showMainApp() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        
+        // Initialize app features
+        loadDashboardData();
+        initializeCharts();
+        
+        // Auto-refresh data every 30 seconds
+        setInterval(loadDashboardData, 30000);
+      }
+
+      // Initialize event listeners
+      function initializeEventListeners() {
+        // Login form
+        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        
+        // Assignment form
+        document.getElementById('assignmentForm').addEventListener('submit', handleAssignment);
+        
+        // Add crew form
+        document.getElementById('addCrewForm').addEventListener('submit', handleAddCrew);
+      }
+
+      // Handle login
+      async function handleLogin(event) {
+        event.preventDefault();
+        
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        
+        const loginBtn = document.getElementById('loginBtn');
+        const originalText = loginBtn.textContent;
+        
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...';
+
+        try {
+          // For demo, we'll use simple authentication
+          if ((username === 'admin' && password === 'admin123') || 
+              (username === 'supervisor' && password === 'sup123')) {
+            currentUser = {
+              id: username === 'admin' ? 'admin-001' : 'supervisor-001',
+              username: username,
+              name: username === 'admin' ? 'System Administrator' : 'Ward Supervisor',
+              role: username === 'admin' ? 'admin' : 'ward_supervisor'
+            };
+            authToken = 'demo-token';
+            
+            localStorage.setItem('swachhgram_token', authToken);
+            localStorage.setItem('swachhgram_user', JSON.stringify(currentUser));
+            
+            showMainApp();
+            showAlert('Login successful!', 'success');
+          } else {
+            showAlert('Invalid credentials. Use: admin/admin123 or supervisor/sup123', 'danger');
+          }
+        } catch (error) {
+          console.error('Login error:', error);
+          showAlert('Login failed. Please try again.', 'danger');
+        } finally {
+          loginBtn.disabled = false;
+          loginBtn.textContent = originalText;
+        }
+      }
+
+      // Show section
+      function showSection(section) {
+        console.log('Showing section:', section);
+        
+        // Hide all sections
+        document.getElementById('overviewSection').style.display = 'none';
+        document.getElementById('incidentsSection').style.display = 'none';
+        document.getElementById('crewSection').style.display = 'none';
+        document.getElementById('analyticsSection').style.display = 'none';
+        
+        // Show selected section
+        const selectedSection = document.getElementById(section + 'Section');
+        if (selectedSection) {
+          selectedSection.style.display = 'block';
+          console.log('Section displayed:', section + 'Section');
+        } else {
+          console.error('Section not found:', section + 'Section');
+        }
+        
+        if (section === 'incidents') {
+          console.log('Loading incidents...');
+          loadIncidents();
+        } else if (section === 'crew') {
+          console.log('Loading crew...');
+          loadCrew();
+        } else if (section === 'analytics') {
+          console.log('Loading analytics...');
+          loadAnalytics();
+        }
+      }
+
+      // Load dashboard data
+      async function loadDashboardData() {
+        try {
+          // Get incidents from shared data server
+          const response = await fetch(SERVICES.SHARED_DATA + '/incidents');
+          const data = await response.json();
+          
+          if (response.ok) {
+            allIncidents = data.incidents;
+            
+            // Calculate metrics
+            const totalIncidents = allIncidents.length;
+            const totalCollections = allIncidents.filter(inc => inc.status === 'completed').length;
+            const activeCrew = 3; // Mock data
+            const slaCompliance = totalIncidents > 0 ? ((totalCollections / totalIncidents) * 100).toFixed(1) : 0;
+            
+            // Update metrics
+            document.getElementById('totalIncidents').textContent = totalIncidents;
+            document.getElementById('totalCollections').textContent = totalCollections;
+            document.getElementById('activeCrew').textContent = activeCrew;
+            document.getElementById('slaCompliance').textContent = slaCompliance + '%';
+            
+            // Update quick stats
+            document.getElementById('quickTotal').textContent = totalIncidents;
+            document.getElementById('quickPending').textContent = allIncidents.filter(inc => inc.status === 'pending').length;
+            document.getElementById('quickAssigned').textContent = allIncidents.filter(inc => inc.status === 'assigned').length;
+            
+            loadRecentActivity();
+            initializeMap();
+          }
+        } catch (error) {
+          console.error('Failed to load dashboard data:', error);
+        }
+      }
+
+      // Load recent activity
+      function loadRecentActivity() {
+        const activities = [
+          { type: 'incident', action: 'New incident reported', id: allIncidents[0]?.id || 'INC-001', time: '2 minutes ago', priority: 'urgent' },
+          { type: 'assignment', action: 'Incident assigned to crew', id: allIncidents[0]?.id || 'INC-001', crew: 'Crew-001', time: '5 minutes ago' },
+          { type: 'collection', action: 'Collection completed', id: 'COL-015', crew: 'Crew-002', time: '8 minutes ago' },
+          { type: 'incident', action: 'Incident resolved', id: 'INC-022', time: '12 minutes ago' },
+          { type: 'assignment', action: 'Crew status updated', crew: 'Crew-003', status: 'Available', time: '15 minutes ago' }
+        ];
+        
+        const activityHtml = activities.map(activity => `
+          <div class="mb-2 p-2 border rounded">
+            <div class="d-flex justify-content-between align-items-center">
+              <strong>${activity.type === 'incident' ? activity.id : activity.crew || activity.action}</strong>
+              <span class="text-muted small">${activity.time}</span>
+            </div>
+            <div class="small">${activity.action}</div>
+            ${activity.priority ? `<span class="priority-badge priority-${activity.priority}">${activity.priority}</span>` : ''}
+          </div>
+        `).join('');
+        
+        const recentActivityEl = document.getElementById('recentActivity');
+        if (recentActivityEl) {
+          recentActivityEl.innerHTML = activityHtml;
+        }
+      }
+
+      // Load incidents
+      async function loadIncidents() {
+        const container = document.getElementById('incidentsList');
+        
+        if (!container) return;
+        
+        // Show loading
+        container.innerHTML = `
+          <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading incidents...</p>
+          </div>
+        `;
+        
+        try {
+          console.log('Loading incidents from:', SERVICES.SHARED_DATA + '/incidents');
+          
+          // Get incidents from shared data server
+          const response = await fetch(SERVICES.SHARED_DATA + '/incidents', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          });
+          
+          console.log('Response status:', response.status);
+          console.log('Response ok:', response.ok);
+          
+          const data = await response.json();
+          console.log('Response data:', data);
+          
+          if (response.ok) {
+            allIncidents = data.incidents;
+            console.log('Loaded incidents:', allIncidents.length);
+            
+            if (allIncidents.length === 0) {
+              container.innerHTML = '<p class="text-muted">No incidents reported yet. Please have citizens report incidents first.</p>';
+              return;
+            }
+            
+            const incidentsHtml = allIncidents.map(incident => `
+              <div class="card incident-card priority-${incident.severity || 'medium'} mb-3">
+                <div class="card-body">
+                  <div class="row align-items-center">
+                    <div class="col-md-2">
+                      ${incident.photo_url ? `<img src="${incident.photo_url}" class="incident-photo" alt="Incident photo">` : 
+                        '<div class="text-muted p-2 bg-light rounded">No photo</div>'}
+                    </div>
+                    <div class="col-md-6">
+                      <h5 class="card-title">${incident.id}</h5>
+                      <p class="card-text">${incident.description}</p>
+                      <div class="d-flex gap-2 mb-2">
+                        <span class="badge bg-primary">${incident.category}</span>
+                        <span class="priority-badge priority-${incident.severity || 'medium'}">${incident.severity || 'medium'}</span>
+                        <span class="status-badge status-${incident.status}">${incident.status.replace('_', ' ')}</span>
+                      </div>
+                      <small class="text-muted">
+                        <i class="bi bi-geo-alt"></i> ${incident.address || `${incident.location.latitude.toFixed(4)}, ${incident.location.longitude.toFixed(4)}`} | 
+                        <i class="bi bi-clock"></i> ${new Date(incident.created_at).toLocaleString()}
+                      </small>
+                      ${incident.assigned_to ? `<br><small class="text-muted"><i class="bi bi-person"></i> Assigned to: ${incident.assigned_to}</small>` : ''}
+                    </div>
+                    <div class="col-md-4 text-end">
+                      <div class="btn-group-vertical" role="group">
+                        <button class="btn btn-sm btn-primary mb-2" onclick="assignIncident('${incident.id}')">
+                          ${incident.assigned_to ? 'Reassign' : 'Assign'}
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary mb-2" onclick="viewIncidentDetails('${incident.id}')">
+                          View Details
+                        </button>
+                        <button class="btn btn-sm btn-outline-success" onclick="trackIncident('${incident.id}')">
+                          Track
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `).join('');
+            
+            container.innerHTML = incidentsHtml;
+          } else {
+            console.error('Failed to load incidents. Status:', response.status);
+            container.innerHTML = `<p class="text-danger">Failed to load incidents. Status: ${response.status}. Please try again.</p>`;
+          }
+        } catch (error) {
+          console.error('Load incidents error:', error);
+          container.innerHTML = `<p class="text-danger">Network error: ${error.message}. Please check if shared data server is running on ${SERVICES.SHARED_DATA}</p>`;
+        }
+      }
+
+      // Load crew
+      async function loadCrew() {
+        const container = document.getElementById('crewList');
+        
+        if (!container) return;
+        
+        // Show loading
+        container.innerHTML = `
+          <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading crew data...</p>
+          </div>
+        `;
+        
+        try {
+          // Get crews from shared data server
+          const response = await fetch(SERVICES.SHARED_DATA + '/crews');
+          const data = await response.json();
+          
+          if (response.ok) {
+            allCrews = data.crews;
+            
+            const crewHtml = allCrews.map(member => `
+              <div class="card crew-card mb-3">
+                <div class="card-body">
+                  <div class="row align-items-center">
+                    <div class="col-md-8">
+                      <h5 class="card-title">${member.name}</h5>
+                      <div class="d-flex gap-2 mb-2">
+                        <span class="crew-status crew-${member.status}">${member.status}</span>
+                        <span class="badge bg-info">${member.collections_today} collections today</span>
+                        <span class="badge bg-secondary">${member.avg_time}min avg time</span>
+                      </div>
+                      <small class="text-muted">
+                        <i class="bi bi-geo-alt"></i> ${member.current_location ? `${member.current_location.latitude.toFixed(4)}, ${member.current_location.longitude.toFixed(4)}` : 'Location unknown'} | 
+                        <i class="bi bi-clock"></i> ${new Date(member.last_location_update).toLocaleString()}
+                      </small>
+                    </div>
+                    <div class="col-md-4 text-end">
+                      <div class="btn-group-vertical" role="group">
+                        <button class="btn btn-sm btn-primary mb-2" onclick="viewCrewDetails('${member.id}')">
+                          View Details
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary mb-2" onclick="trackCrew('${member.id}')">
+                          Track Location
+                        </button>
+                        <button class="btn btn-sm btn-outline-success mb-2" onclick="contactCrew('${member.id}')">
+                          Contact
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `).join('');
+            
+            container.innerHTML = crewHtml;
+          } else {
+            container.innerHTML = '<p class="text-muted">Failed to load crew data. Please try again.</p>';
+          }
+        } catch (error) {
+          console.error('Load crew error:', error);
+          container.innerHTML = '<p class="text-muted">Network error. Please try again.</p>';
+        }
+      }
+
+      // Load analytics
+      function loadAnalytics() {
+        console.log('Analytics section loaded successfully');
+      }
+
+      // Assign incident
+      function assignIncident(incidentId) {
+        currentIncidentId = incidentId;
+        document.getElementById('assignmentIncidentId').value = incidentId;
+        
+        // Load crew options
+        const crewOptions = allCrews.map(crew => 
+          `<option value="${crew.id}">${crew.name} (${crew.status})</option>`
+        ).join('');
+        
+        const crewSelect = document.getElementById('crewSelect');
+        crewSelect.innerHTML = '<option value="">Choose crew member...</option>' + crewOptions;
+        
+        const modal = new bootstrap.Modal(document.getElementById('assignmentModal'));
+        modal.show();
+      }
+
+      // Handle assignment
+      async function handleAssignment(event) {
+        event.preventDefault();
+        
+        const crewId = document.getElementById('crewSelect').value;
+        const priority = document.getElementById('assignmentPriority').value;
+        const notes = event.target.querySelector('textarea').value;
+        
+        if (!crewId) {
+          showAlert('Please select a crew member', 'warning');
+          return;
+        }
+        
+        try {
+          const response = await fetch(`${SERVICES.SHARED_DATA}/incidents/${currentIncidentId}/assign?crew_id=${crewId}`, {
+            method: 'POST'
+          });
+          
+          if (response.ok) {
+            showAlert(`Incident ${currentIncidentId} assigned to ${crewId}`, 'success');
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('assignmentModal'));
+            modal.hide();
+            
+            // Reset form
+            event.target.reset();
+            
+            // Refresh incidents list
+            loadIncidents();
+            loadDashboardData();
+          } else {
+            showAlert('Failed to assign incident', 'error');
+          }
+        } catch (error) {
+          console.error('Assignment error:', error);
+          showAlert('Failed to assign incident', 'error');
+        }
+      }
+
+      // Show add crew modal
+      function showAddCrewModal() {
+        const modal = new bootstrap.Modal(document.getElementById('addCrewModal'));
+        modal.show();
+      }
+
+      // Handle add crew
+      async function handleAddCrew(event) {
+        event.preventDefault();
+        
+        const crewData = {
+          id: document.getElementById('crewId').value,
+          name: document.getElementById('crewName').value,
+          status: document.getElementById('crewStatus').value,
+          current_location: {
+            latitude: 12.9716,
+            longitude: 77.5946,
+            accuracy: 10
+          },
+          last_location_update: new Date().toISOString(),
+          collections_today: 0,
+          avg_time: 0
+        };
+        
+        try {
+          // For demo, we'll just add to local array and show success
+          allCrews.push(crewData);
+          showAlert(`Crew ${crewData.name} added successfully!`, 'success');
+          
+          // Close modal
+          const modal = bootstrap.Modal.getInstance(document.getElementById('addCrewModal'));
+          modal.hide();
+          
+          // Reset form
+          event.target.reset();
+          
+          // Refresh crew list
+          loadCrew();
+        } catch (error) {
+          console.error('Add crew error:', error);
+          showAlert('Failed to add crew', 'error');
+        }
+      }
+
+      // View incident details
+      function viewIncidentDetails(incidentId) {
+        const incident = allIncidents.find(inc => inc.id === incidentId);
+        if (incident) {
+          alert(`Incident Details:\n\nID: ${incident.id}\nCategory: ${incident.category}\nDescription: ${incident.description}\nStatus: ${incident.status}\nSeverity: ${incident.severity}\nLocation: ${incident.location.latitude.toFixed(6)}, ${incident.location.longitude.toFixed(6)}\nReported: ${new Date(incident.created_at).toLocaleString()}\n\nThis would open a detailed view in a real application.`);
+        }
+      }
+
+      // Track incident
+      function trackIncident(incidentId) {
+        alert(`Tracking ${incidentId} - Feature coming soon!`);
+      }
+
+      // View crew details
+      function viewCrewDetails(crewId) {
+        const crew = allCrews.find(c => c.id === crewId);
+        if (crew) {
+          alert(`Crew Details:\n\nID: ${crew.id}\nName: ${crew.name}\nStatus: ${crew.status}\nCollections Today: ${crew.collections_today}\nAvg Time: ${crew.avg_time}min\nLocation: ${crew.current_location.latitude.toFixed(6)}, ${crew.current_location.longitude.toFixed(6)}\nLast Update: ${new Date(crew.last_location_update).toLocaleString()}\n\nThis would open a detailed view in a real application.`);
+        }
+      }
+
+      // Track crew
+      function trackCrew(crewId) {
+        alert(`Tracking ${crewId} - Feature coming soon!`);
+      }
+
+      // Contact crew
+      function contactCrew(crewId) {
+        alert(`Contacting ${crewId} - Feature coming soon!`);
+      }
+
+      // Refresh incidents
+      function refreshIncidents() {
+        loadIncidents();
+        loadDashboardData();
+        showAlert('Incidents refreshed', 'success');
+      }
+
+      // Test incidents directly
+      async function testIncidentsDirect() {
+        console.log('Testing incidents directly...');
+        showAlert('Testing incidents API directly...', 'info');
+        
+        try {
+          const response = await fetch(SERVICES.SHARED_DATA + '/incidents');
+          console.log('Direct test response:', response);
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Direct test data:', data);
+            showAlert(`Direct test successful! Found ${data.incidents.length} incidents`, 'success');
+          } else {
+            showAlert(`Direct test failed: ${response.status}`, 'error');
+          }
+        } catch (error) {
+          console.error('Direct test error:', error);
+          showAlert(`Direct test error: ${error.message}`, 'error');
+        }
+      }
+
+      // Apply filters
+      function applyFilters() {
+        const statusFilter = document.getElementById('statusFilter').value;
+        const priorityFilter = document.getElementById('priorityFilter').value;
+        const categoryFilter = document.getElementById('categoryFilter').value;
+        
+        showAlert(`Filters applied: Status=${statusFilter}, Priority=${priorityFilter}, Category=${categoryFilter}`, 'info');
+        loadIncidents(); // Reload with filters
+      }
+
+      // Initialize map
+      function initializeMap() {
+        if (!map) {
+          map = L.map('liveMap').setView([12.9716, 77.5946], 12);
+          
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+          }).addTo(map);
+        }
+        
+        updateMapMarkers();
+      }
+
+      // Update map markers
+      function updateMapMarkers() {
+        // Remove existing markers
+        crewMarkers.forEach(marker => map.removeLayer(marker));
+        incidentMarkers.forEach(marker => map.removeLayer(marker));
+        crewMarkers = [];
+        incidentMarkers = [];
+        
+        // Add crew markers
+        allCrews.forEach(crew => {
+          if (crew.current_location) {
+            const marker = L.marker([crew.current_location.latitude, crew.current_location.longitude], {
+              icon: L.divIcon({
+                html: `<div style="background: #6366f1; color: white; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px;">C</div>`,
+                className: 'crew-marker',
+                iconSize: [30, 30]
+              })
+            })
+              .addTo(map)
+              .bindPopup(`<b>${crew.name}</b><br>Status: ${crew.status}`);
+            
+            crewMarkers.push(marker);
+          }
+        });
+        
+        // Add incident markers
+        allIncidents.forEach(incident => {
+          if (incident.location) {
+            const color = incident.status === 'completed' ? 'green' : 
+                         incident.status === 'in_progress' ? 'orange' : 'red';
+            
+            const marker = L.marker([incident.location.latitude, incident.location.longitude], {
+              icon: L.divIcon({
+                html: `<div style="background: ${color}; color: white; border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">!</div>`,
+                className: 'incident-marker',
+                iconSize: [25, 25]
+              })
+            })
+              .addTo(map)
+              .bindPopup(`<b>${incident.id}</b><br>Status: ${incident.status}<br>Priority: ${incident.severity}`);
+            
+            incidentMarkers.push(marker);
+          }
+        });
+      }
+
+      // Initialize charts
+      function initializeCharts() {
+        // Incident trends chart
+        const incidentCtx = document.getElementById('incidentTrendsChart');
+        if (incidentCtx) {
+          new Chart(incidentCtx.getContext('2d'), {
+            type: 'line',
+            data: {
+              labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+              datasets: [{
+                label: 'Incidents',
+                data: [18, 22, 25, 20, 28, 15, 12],
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                tension: 0.1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false
+            }
+          });
+        }
+
+        // Collection performance chart
+        const collectionCtx = document.getElementById('collectionPerformanceChart');
+        if (collectionCtx) {
+          new Chart(collectionCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+              datasets: [{
+                label: 'Collections',
+                data: [15, 18, 20, 16, 22, 12, 8],
+                backgroundColor: '#4facfe'
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false
+            }
+          });
+        }
+      }
+
+      // Initialize analytics charts
+      function initializeAnalyticsCharts() {
+        // Monthly performance chart
+        const monthlyCtx = document.getElementById('monthlyPerformanceChart');
+        if (monthlyCtx) {
+          new Chart(monthlyCtx.getContext('2d'), {
+            type: 'line',
+            data: {
+              labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+              datasets: [{
+                label: 'Incidents',
+                data: [450, 520, 480, 550, 600, 580],
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                tension: 0.1
+              }, {
+                label: 'Collections',
+                data: [420, 480, 450, 500, 550, 520],
+                borderColor: '#4facfe',
+                backgroundColor: 'rgba(79, 172, 254, 0.1)',
+                tension: 0.1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false
+            }
+          });
+        }
+
+        // Category distribution chart
+        const categoryCtx = document.getElementById('categoryDistributionChart');
+        if (categoryCtx) {
+          new Chart(categoryCtx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+              labels: ['Overflowing Bin', 'Black Spot', 'Illegal Dumping', 'Street Cleaning', 'Other'],
+              datasets: [{
+                data: [35, 25, 20, 15, 5],
+                backgroundColor: ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981']
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false
+            }
+          });
+        }
+
+        // SLA compliance chart
+        const slaCtx = document.getElementById('slaComplianceChart');
+        if (slaCtx) {
+          new Chart(slaCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+              datasets: [{
+                label: 'Within SLA',
+                data: [85, 88, 82, 90, 87, 92, 89],
+                backgroundColor: '#28a745'
+              }, {
+                label: 'Beyond SLA',
+                data: [15, 12, 18, 10, 13, 8, 11],
+                backgroundColor: '#dc3545'
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                x: {
+                  stacked: true
+                },
+                y: {
+                  stacked: true
+                }
+              }
+            }
+          });
+        }
+      }
+
+      // Logout
+      function logout() {
+        localStorage.removeItem('swachhgram_token');
+        localStorage.removeItem('swachhgram_user');
+        authToken = null;
+        currentUser = null;
+        showAlert('Logged out successfully', 'info');
+        showLogin();
+      }
+
+      // Show alert
+      function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        alertDiv.innerHTML = `
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        document.body.appendChild(alertDiv);
+        
+        setTimeout(() => {
+          alertDiv.remove();
+        }, 5000);
+      }
+    </script>
+  </body>
+</html>

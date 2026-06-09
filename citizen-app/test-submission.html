@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Citizen App Submission</title>
+    <script src="shared-data.js"></script>
+</head>
+<body>
+    <h1>Test Citizen App Submission</h1>
+    <button onclick="testSubmission()">Test Submit Incident</button>
+    <div id="result"></div>
+
+    <script>
+        function testSubmission() {
+            try {
+                // Test data
+                const incidentData = {
+                    category: 'overflowing_bin',
+                    description: 'Test overflowing bin',
+                    severity: 'medium',
+                    address: 'Test Address',
+                    location: {
+                        latitude: 12.9716,
+                        longitude: 77.5946,
+                        accuracy: 10
+                    },
+                    photo_url: 'https://via.placeholder.com/300x200',
+                    reported_by: 'test-citizen',
+                    reporter_name: 'Test Citizen'
+                };
+
+                // Add incident
+                const newIncident = SwachhGramData.addIncident(incidentData);
+                
+                // Check if it was added
+                const allIncidents = SwachhGramData.getAllIncidents();
+                const found = allIncidents.find(inc => inc.id === newIncident.id);
+                
+                if (found) {
+                    document.getElementById('result').innerHTML = `
+                        <h3>Success!</h3>
+                        <p>Incident ID: ${newIncident.id}</p>
+                        <p>Total incidents: ${allIncidents.length}</p>
+                        <p>Category: ${found.category}</p>
+                        <p>Description: ${found.description}</p>
+                        <p>Status: ${found.status}</p>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = '<h3>Error: Incident not found in data store</h3>';
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `<h3>Error: ${error.message}</h3>`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,174 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgis/postgis:15-3.3
+    environment:
+      POSTGRES_DB: swachhgram
+      POSTGRES_USER: swachh_user
+      POSTGRES_PASSWORD: swachh_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - swachhgram-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - swachhgram-network
+
+  auth_service:
+    build: ./auth_service
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://swachh_user:swachh_pass@postgres:5432/swachhgram
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - MSG91_AUTH_KEY=your-msg91-auth-key
+      - TWILIO_ACCOUNT_SID=your-twilio-account-sid
+      - TWILIO_AUTH_TOKEN=your-twilio-auth-token
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./auth_service:/app
+    networks:
+      - swachhgram-network
+
+  ai_service:
+    build: ./ai_service
+    ports:
+      - "8001:8001"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - MODEL_PATH=/app/models
+    volumes:
+      - ./ai_service:/app
+      - ./ai_service/models:/app/models
+    networks:
+      - swachhgram-network
+
+  incident_service:
+    build: ./incident_service
+    ports:
+      - "8002:8002"
+    environment:
+      - DATABASE_URL=postgresql://swachh_user:swachh_pass@postgres:5432/swachhgram
+      - REDIS_URL=redis://redis:6379
+      - AWS_ACCESS_KEY_ID=your-aws-access-key
+      - AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+      - AWS_S3_BUCKET=swachhgram-images
+      - FCM_SERVER_KEY=your-fcm-server-key
+    depends_on:
+      - postgres
+      - redis
+      - auth_service
+    volumes:
+      - ./incident_service:/app
+    networks:
+      - swachhgram-network
+
+  collection_service:
+    build: ./collection_service
+    ports:
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=postgresql://swachh_user:swachh_pass@postgres:5432/swachhgram
+      - REDIS_URL=redis://redis:6379
+      - AWS_ACCESS_KEY_ID=your-aws-access-key
+      - AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+      - AWS_S3_BUCKET=swachhgram-images
+    depends_on:
+      - postgres
+      - redis
+      - auth_service
+    volumes:
+      - ./collection_service:/app
+    networks:
+      - swachhgram-network
+
+  sla_service:
+    build: ./sla_service
+    ports:
+      - "8004:8004"
+    environment:
+      - DATABASE_URL=postgresql://swachh_user:swachh_pass@postgres:5432/swachhgram
+      - REDIS_URL=redis://redis:6379
+      - FCM_SERVER_KEY=your-fcm-server-key
+    depends_on:
+      - postgres
+      - redis
+      - auth_service
+    volumes:
+      - ./sla_service:/app
+    networks:
+      - swachhgram-network
+
+  fleet_admin_service:
+    build: ./fleet_admin_service
+    ports:
+      - "8005:8005"
+    environment:
+      - DATABASE_URL=postgresql://swachh_user:swachh_pass@postgres:5432/swachhgram
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - postgres
+      - redis
+      - auth_service
+    volumes:
+      - ./fleet_admin_service:/app
+    networks:
+      - swachhgram-network
+
+  dashboard_service:
+    build: ./dashboard_service
+    ports:
+      - "8006:8006"
+    environment:
+      - DATABASE_URL=postgresql://swachh_user:swachh_pass@postgres:5432/swachhgram
+      - REDIS_URL=redis://redis:6379
+      - AUTH_SERVICE_URL=http://auth_service:8000
+      - INCIDENT_SERVICE_URL=http://incident_service:8002
+      - COLLECTION_SERVICE_URL=http://collection_service:8003
+      - AI_SERVICE_URL=http://ai_service:8001
+    depends_on:
+      - postgres
+      - redis
+      - auth_service
+      - incident_service
+      - collection_service
+      - ai_service
+    volumes:
+      - ./dashboard_service:/app
+      - ./dashboard_service/public:/app/public
+    networks:
+      - swachhgram-network
+
+  frontend-web:
+    build: ./frontend-web
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_BASE_URL=http://localhost:8006
+      - REACT_APP_WS_URL=ws://localhost:8006
+    volumes:
+      - ./frontend-web:/app
+      - /app/node_modules
+    networks:
+      - swachhgram-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  swachhgram-network:
+    driver: bridge

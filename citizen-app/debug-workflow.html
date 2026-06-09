@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug SwachhGram Workflow</title>
+    <script src="shared-data.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .section { 
+            border: 1px solid #ddd; 
+            margin: 10px 0; 
+            padding: 15px; 
+            border-radius: 5px; 
+            background: #f9f9f9;
+        }
+        .result { 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 3px;
+        }
+        .pass { 
+            background: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb;
+        }
+        .fail { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f5c6cb;
+        }
+        .info { 
+            background: #d1ecf1; 
+            color: #0c5460; 
+            border: 1px solid #bee5eb;
+        }
+        .btn { 
+            background: #007bff; 
+            color: white; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 3px; 
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { 
+            background: #0056b3;
+        }
+        .btn-success { 
+            background: #28a745; 
+        }
+        .btn-success:hover { 
+            background: #1e7e34;
+        }
+        pre { 
+            background: #f8f9fa; 
+            padding: 10px; 
+            border-radius: 3px; 
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>SwachhGram Workflow Debug</h1>
+    
+    <div class="section">
+        <h2>Step 1: Test Citizen Incident Submission</h2>
+        <button class="btn" onclick="testCitizenSubmission()">Test Citizen Submission</button>
+        <div id="citizen-result" class="result"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Step 2: Check Shared Data Store</h2>
+        <button class="btn" onclick="checkSharedData()">Check Shared Data</button>
+        <div id="shared-result" class="result"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Step 3: Test Crew App Data Loading</h2>
+        <button class="btn" onclick="testCrewLoading()">Test Crew Loading</button>
+        <div id="crew-result" class="result"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Step 4: Test Admin Assignment</h2>
+        <button class="btn" onclick="testAdminAssignment()">Test Admin Assignment</button>
+        <div id="admin-result" class="result"></div>
+    </div>
+    
+    <div class="section">
+        <h2>Step 5: Complete Workflow Test</h2>
+        <button class="btn btn-success" onclick="testCompleteWorkflow()">Test Complete Workflow</button>
+        <div id="workflow-result" class="result"></div>
+    </div>
+
+    <script>
+        function testCitizenSubmission() {
+            try {
+                console.log('Testing citizen submission...');
+                
+                // Create test incident data
+                const incidentData = {
+                    category: 'overflowing_bin',
+                    description: 'Test incident from debug tool',
+                    severity: 'medium',
+                    address: 'Test Address',
+                    location: {
+                        latitude: 12.9716,
+                        longitude: 77.5946,
+                        accuracy: 10
+                    },
+                    photo_url: 'https://via.placeholder.com/300x200/ff6b6b/ffffff?text=Test+Incident',
+                    reported_by: 'test-citizen',
+                    reporter_name: 'Test Citizen'
+                };
+
+                // Add incident to shared data store
+                const newIncident = SwachhGramData.addIncident(incidentData);
+                
+                console.log('Incident added:', newIncident);
+                
+                // Verify it was added
+                const allIncidents = SwachhGramData.getAllIncidents();
+                const found = allIncidents.find(inc => inc.id === newIncident.id);
+                
+                if (found) {
+                    document.getElementById('citizen-result').innerHTML = `
+                        <div class="pass">
+                            <strong>SUCCESS</strong>: Citizen submission working<br>
+                            Incident ID: ${newIncident.id}<br>
+                            Total incidents in store: ${allIncidents.length}<br>
+                            <pre>${JSON.stringify(found, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('citizen-result').innerHTML = `
+                        <div class="fail">
+                            <strong>FAIL</strong>: Incident not found in data store
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('citizen-result').innerHTML = `
+                    <div class="fail">
+                        <strong>ERROR</strong>: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function checkSharedData() {
+            try {
+                console.log('Checking shared data store...');
+                
+                const allIncidents = SwachhGramData.getAllIncidents();
+                
+                let resultHtml = `<div class="info"><strong>Shared Data Store Status:</strong><br>`;
+                resultHtml += `Total incidents: ${allIncidents.length}<br><br>`;
+                
+                if (allIncidents.length === 0) {
+                    resultHtml += `<strong>NO INCIDENTS FOUND</strong> - This is the problem!<br>`;
+                    resultHtml += `Citizen app needs to submit incidents first.`;
+                } else {
+                    resultHtml += `<strong>Incidents found:</strong><br>`;
+                    allIncidents.forEach((inc, index) => {
+                        resultHtml += `${index + 1}. ${inc.id} - ${inc.category} - Status: ${inc.status}<br>`;
+                    });
+                }
+                
+                resultHtml += `<br><pre>Total incidents: ${JSON.stringify(allIncidents, null, 2)}</pre></div>`;
+                
+                document.getElementById('shared-result').innerHTML = resultHtml;
+                
+            } catch (error) {
+                document.getElementById('shared-result').innerHTML = `
+                    <div class="fail">
+                        <strong>ERROR</strong>: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function testCrewLoading() {
+            try {
+                console.log('Testing crew app data loading...');
+                
+                // Simulate crew user
+                const currentUser = {
+                    id: 'crew-001',
+                    username: 'crew',
+                    name: 'Collection Crew',
+                    role: 'crew'
+                };
+                
+                // Get incidents from shared data store
+                const allIncidents = SwachhGramData.getAllIncidents();
+                
+                // Filter incidents for this crew (same logic as crew app)
+                const myIncidents = allIncidents.filter(inc => {
+                    // Show incidents assigned to this crew OR unassigned incidents
+                    return inc.assigned_to === currentUser.id || !inc.assigned_to;
+                });
+                
+                let resultHtml = `<div class="info"><strong>Crew App Data Loading:</strong><br>`;
+                resultHtml += `Crew ID: ${currentUser.id}<br>`;
+                resultHtml += `Total incidents in system: ${allIncidents.length}<br>`;
+                resultHtml += `Incidents available to crew: ${myIncidents.length}<br><br>`;
+                
+                if (myIncidents.length === 0) {
+                    resultHtml += `<strong>NO INCIDENTS FOR CREW</strong><br>`;
+                    resultHtml += `This means either:<br>`;
+                    resultHtml += `1. No incidents in system, OR<br>`;
+                    resultHtml += `2. All incidents assigned to other crews<br>`;
+                    resultHtml += `3. Crew ID mismatch`;
+                } else {
+                    resultHtml += `<strong>Incidents available:</strong><br>`;
+                    myIncidents.forEach((inc, index) => {
+                        resultHtml += `${index + 1}. ${inc.id} - ${inc.category} - ${inc.status}<br>`;
+                        resultHtml += `   Assigned to: ${inc.assigned_to || 'Unassigned'}<br>`;
+                    });
+                }
+                
+                resultHtml += `</div>`;
+                
+                document.getElementById('crew-result').innerHTML = resultHtml;
+                
+            } catch (error) {
+                document.getElementById('crew-result').innerHTML = `
+                    <div class="fail">
+                        <strong>ERROR</strong>: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function testAdminAssignment() {
+            try {
+                console.log('Testing admin assignment...');
+                
+                const allIncidents = SwachhGramData.getAllIncidents();
+                
+                let resultHtml = `<div class="info"><strong>Admin Assignment Test:</strong><br>`;
+                resultHtml += `Total incidents: ${allIncidents.length}<br><br>`;
+                
+                if (allIncidents.length === 0) {
+                    resultHtml += `No incidents to assign. Create incidents first.`;
+                } else {
+                    // Test assigning first incident to crew-001
+                    const firstIncident = allIncidents[0];
+                    const crewId = 'crew-001';
+                    
+                    resultHtml += `Testing assignment of ${firstIncident.id} to ${crewId}...<br>`;
+                    
+                    const assignmentResult = SwachhGramData.assignIncident(firstIncident.id, crewId);
+                    
+                    if (assignmentResult) {
+                        resultHtml += `<strong>SUCCESS</strong>: Assignment working<br>`;
+                        
+                        // Verify assignment
+                        const updatedIncident = SwachhGramData.getAllIncidents().find(inc => inc.id === firstIncident.id);
+                        resultHtml += `Updated incident status: ${updatedIncident.status}<br>`;
+                        resultHtml += `Assigned to: ${updatedIncident.assigned_to}<br>`;
+                    } else {
+                        resultHtml += `<strong>FAIL</strong>: Assignment failed`;
+                    }
+                }
+                
+                resultHtml += `</div>`;
+                
+                document.getElementById('admin-result').innerHTML = resultHtml;
+                
+            } catch (error) {
+                document.getElementById('admin-result').innerHTML = `
+                    <div class="fail">
+                        <strong>ERROR</strong>: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function testCompleteWorkflow() {
+            try {
+                console.log('Testing complete workflow...');
+                
+                let resultHtml = `<div class="info"><strong>Complete Workflow Test:</strong><br>`;
+                
+                // Step 1: Clear existing data
+                SwachhGramData.incidents = [];
+                resultHtml += `1. Cleared existing data<br>`;
+                
+                // Step 2: Citizen submits incident
+                const incidentData = {
+                    category: 'overflowing_bin',
+                    description: 'Test incident for complete workflow',
+                    severity: 'medium',
+                    location: {
+                        latitude: 12.9716,
+                        longitude: 77.5946,
+                        accuracy: 10
+                    },
+                    photo_url: 'https://via.placeholder.com/300x200',
+                    reported_by: 'test-citizen',
+                    reporter_name: 'Test Citizen'
+                };
+                
+                const newIncident = SwachhGramData.addIncident(incidentData);
+                resultHtml += `2. Citizen submitted incident: ${newIncident.id}<br>`;
+                
+                // Step 3: Check if crew can see it
+                const crewId = 'crew-001';
+                const crewIncidents = SwachhGramData.getAllIncidents().filter(inc => 
+                    inc.assigned_to === crewId || !inc.assigned_to
+                );
+                resultHtml += `3. Crew can see ${crewIncidents.length} incidents<br>`;
+                
+                // Step 4: Admin assigns incident
+                const assignmentResult = SwachhGramData.assignIncident(newIncident.id, crewId);
+                resultHtml += `4. Admin assigned incident: ${assignmentResult ? 'SUCCESS' : 'FAIL'}<br>`;
+                
+                // Step 5: Crew starts work
+                const workResult = SwachhGramData.startIncidentWork(newIncident.id);
+                resultHtml += `5. Crew started work: ${workResult ? 'SUCCESS' : 'FAIL'}<br>`;
+                
+                // Step 6: Crew completes work
+                const completionData = {
+                    weight: 5.5,
+                    notes: 'Test completion'
+                };
+                const completeResult = SwachhGramData.completeIncident(newIncident.id, completionData);
+                resultHtml += `6. Crew completed work: ${completeResult ? 'SUCCESS' : 'FAIL'}<br>`;
+                
+                // Final status
+                const finalIncident = SwachhGramData.getAllIncidents().find(inc => inc.id === newIncident.id);
+                resultHtml += `<br><strong>Final Status:</strong><br>`;
+                resultHtml += `ID: ${finalIncident.id}<br>`;
+                resultHtml += `Status: ${finalIncident.status}<br>`;
+                resultHtml += `Assigned to: ${finalIncident.assigned_to}<br>`;
+                resultHtml += `Weight collected: ${finalIncident.weight_collected}<br>`;
+                
+                resultHtml += `<br><strong>WORKFLOW TEST: ${assignmentResult && workResult && completeResult ? 'PASS' : 'FAIL'}</strong></div>`;
+                
+                document.getElementById('workflow-result').innerHTML = resultHtml;
+                
+            } catch (error) {
+                document.getElementById('workflow-result').innerHTML = `
+                    <div class="fail">
+                        <strong>ERROR</strong>: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-check on load
+        window.onload = function() {
+            checkSharedData();
+        };
+    </script>
+</body>
+</html>

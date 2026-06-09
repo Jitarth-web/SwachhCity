@@ -1,0 +1,59 @@
+"""
+Database configuration for Collection Service.
+IEEE Std 830-1998 SRS compliant database layer with PostGIS support.
+"""
+
+from sqlalchemy import create_engine, MetaData
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from geoalchemy2 import Geometry
+import os
+from shared.utils import settings
+
+# Database configuration
+DATABASE_URL = settings.DATABASE_URL or "postgresql://swachh_user:swachh_pass@localhost:5432/swachhgram"
+
+# Create engine with PostGIS support
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_recycle=300,
+    echo=os.getenv("DEBUG", "false").lower() == "true",
+    connect_args={"options": "-cdefault_transaction_isolation=serializable"}
+)
+
+# Create session factory
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Create base model class
+Base = declarative_base()
+
+# Metadata for migrations
+metadata = MetaData()
+
+
+def get_db():
+    """Get database session."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def create_tables():
+    """Create all database tables."""
+    Base.metadata.create_all(bind=engine)
+
+
+def drop_tables():
+    """Drop all database tables."""
+    Base.metadata.drop_all(bind=engine)
+
+
+def create_postgis_extension():
+    """Create PostGIS extension if it doesn't exist."""
+    from sqlalchemy import text
+    with engine.connect() as conn:
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS postgis;"))
+        conn.commit()

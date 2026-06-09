@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Data Flow</title>
+    <script src="shared-data.js"></script>
+</head>
+<body>
+    <h1>Test Data Flow</h1>
+    <div id="result"></div>
+    <script>
+        console.log('Testing data flow...');
+        
+        // Check if SwachhGramData is available
+        if (typeof SwachhGramData !== 'undefined') {
+            console.log('SwachhGramData is available');
+            
+            // Add a test incident
+            const testIncident = SwachhGramData.addIncident({
+                category: 'overflowing_bin',
+                description: 'Test incident from simple test',
+                severity: 'medium',
+                location: {
+                    latitude: 12.9716,
+                    longitude: 77.5946,
+                    accuracy: 10
+                },
+                photo_url: 'https://via.placeholder.com/300x200',
+                reported_by: 'test-user',
+                reporter_name: 'Test User'
+            });
+            
+            document.getElementById('result').innerHTML = `
+                <h2>Success!</h2>
+                <p>Test incident added: ${testIncident.id}</p>
+                <p>Total incidents: ${SwachhGramData.getAllIncidents().length}</p>
+                <p>You can now check the crew app to see this incident.</p>
+            `;
+        } else {
+            document.getElementById('result').innerHTML = '<h2>Error: SwachhGramData not available</h2>';
+        }
+    </script>
+</body>
+</html>
