@@ -1,0 +1,8 @@
+{
+  "name": "swachhgram",
+  "version": "1.0.0",
+  "description": "Swachhgram Vercel Deployment",
+  "scripts": {
+    "build": "mkdir -p dist && cp -r citizen-app dist/ && cp -r admin-dashboard dist/ && cp -r crew-app dist/ && cp index.html dist/"
+  }
+}
