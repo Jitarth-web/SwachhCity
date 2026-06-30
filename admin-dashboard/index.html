@@ -332,16 +332,29 @@
         transform: translateX(5px);
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       }
+      /* Mobile Responsiveness Improvements */
+      @media (max-width: 768px) {
+        .main-container { padding: 10px; }
+        .card { margin-bottom: 15px; }
+        .row > * { margin-bottom: 15px; }
+        .navbar-brand { font-size: 1.1rem; }
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        #app { padding-bottom: 30px; }
+        .metric-card h3 { font-size: 1.5rem; }
+      }
     </style>
   </head>
   <body>
-    <!-- Login Screen -->
+        <!-- Login/Register Screen -->
     <div id="loginScreen" class="login-container">
       <div class="login-card">
         <div class="text-center mb-4">
           <h2>SwachhCity</h2>
-          <p class="text-muted">Municipal Dashboard</p>
+          <p class="text-muted">Admin Dashboard</p>
         </div>
+        
+        <!-- Flash Message Container -->
+        <div id="flashMessage" class="alert alert-success" style="display: none; position: static; margin-bottom: 20px;"></div>
         
         <form id="loginForm">
           <div class="mb-3">
@@ -357,19 +370,32 @@
           <button type="submit" class="btn btn-primary w-100" id="loginBtn">
             <span id="loginBtnText">Login</span>
           </button>
-        </form>
-        
-        <div class="mt-3">
-          <div class="card">
-            <div class="card-body">
-              <h6>Admin Login</h6>
-              <small class="text-muted">
-                <strong>Admin:</strong> admin / admin123<br>
-                <strong>Supervisor:</strong> supervisor / sup123
-              </small>
-            </div>
+          
+          <div class="text-center mt-3">
+            <a href="#" id="showRegisterBtn" style="text-decoration: none;">Don't have an account? Register here</a>
           </div>
-        </div>
+        </form>
+
+        <form id="registerForm" style="display: none;">
+          <div class="mb-3">
+            <label for="regName" class="form-label">Full Name</label>
+            <input type="text" class="form-control" id="regName" placeholder="Enter full name" required>
+          </div>
+          <div class="mb-3">
+            <label for="regUsername" class="form-label">Username</label>
+            <input type="text" class="form-control" id="regUsername" placeholder="Choose a username" required>
+          </div>
+          <div class="mb-3">
+            <label for="regPassword" class="form-label">Password</label>
+            <input type="password" class="form-control" id="regPassword" placeholder="Create a password" required>
+          </div>
+          <button type="submit" class="btn btn-success w-100" id="registerBtn">
+            <span id="registerBtnText">Register</span>
+          </button>
+          <div class="text-center mt-3">
+            <a href="#" id="showLoginBtn" style="text-decoration: none;">Already have an account? Login</a>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -855,7 +881,23 @@
       // Initialize event listeners
       function initializeEventListeners() {
         // Login form
+        
         document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        document.getElementById('registerForm').addEventListener('submit', handleRegister);
+        
+        document.getElementById('showRegisterBtn').addEventListener('click', (e) => {
+          e.preventDefault();
+          document.getElementById('loginForm').style.display = 'none';
+          document.getElementById('registerForm').style.display = 'block';
+          document.getElementById('flashMessage').style.display = 'none';
+        });
+        
+        document.getElementById('showLoginBtn').addEventListener('click', (e) => {
+          e.preventDefault();
+          document.getElementById('registerForm').style.display = 'none';
+          document.getElementById('loginForm').style.display = 'block';
+        });
+
         
         // Assignment form
         document.getElementById('assignmentForm').addEventListener('submit', handleAssignment);

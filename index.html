@@ -3,199 +3,472 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Swachhgram Portal</title>
+    <title>SwachhCity Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #10b981; /* Green for Swachhgram */
-            --primary-dark: #059669;
-            --bg-color: #0f172a; /* Slate 900 */
-            --card-bg: #1e293b; /* Slate 800 */
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            --primary: #00ff88;
+            --secondary: #00b8ff;
         }
 
-        body {
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.08), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.08), transparent 25%);
         }
 
-        .container {
-            max-width: 1000px;
-            width: 90%;
-            margin: 0 auto;
-            text-align: center;
-            padding: 2rem 0;
-        }
-
-        h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, #34d399 0%, #3b82f6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -1px;
-        }
-
-        p.subtitle {
-            font-size: 1.25rem;
-            color: var(--text-muted);
-            margin-bottom: 4rem;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-            line-height: 1.6;
-        }
-
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 16px;
-            padding: 2.5rem 2rem;
-            text-decoration: none;
-            color: var(--text-main);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
-            position: relative;
+        body, html {
+            font-family: 'Outfit', sans-serif;
             overflow: hidden;
+            height: 100vh;
         }
 
-        .card::before {
+        /* The Sky */
+        .sky {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #87CEEB; /* Day time */
+            z-index: 1;
+        }
+
+        /* Celestial Body (Sun/Moon) */
+        .celestial-body {
+            position: absolute;
+            top: 10vh;
+            left: 70vw;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #facc15;
+            box-shadow: 0 0 50px rgba(250, 204, 21, 0.5);
+            z-index: 2;
+        }
+
+        /* City Skyline */
+        .skyline-container {
+            position: absolute;
+            bottom: 30vh;
+            left: 0;
+            width: 100vw;
+            height: 40vh;
+            z-index: 3;
+            display: flex;
+            align-items: flex-end;
+        }
+        .skyline-svg {
+            width: 200vw;
+            height: 100%;
+        }
+        .skyline-building {
+            fill: #64748b; /* Day time building color */
+            transition: fill 0.5s;
+        }
+
+        /* Sidewalk */
+        .sidewalk {
+            position: absolute;
+            bottom: 30vh;
+            left: 0;
+            width: 100vw;
+            height: 5vh;
+            background: #94a3b8;
+            border-top: 4px solid #cbd5e1;
+            z-index: 4;
+        }
+
+        /* Road */
+        .road {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            height: 30vh;
+            background: #1e293b;
+            z-index: 5;
+            box-shadow: inset 0 20px 20px rgba(0,0,0,0.3);
+        }
+        
+        .road-lines {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 200vw;
+            height: 10px;
+            background: repeating-linear-gradient(90deg, transparent, transparent 50px, #fbbf24 50px, #fbbf24 150px);
+            transform: translateY(-50%);
+        }
+
+        /* Figures (Citizen, Crew, Admin) */
+        .figure {
+            position: absolute;
+            bottom: 35vh; /* Resting on the sidewalk */
+            width: 100px;
+            height: 180px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .figure svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3));
+            transition: transform 0.3s;
+        }
+
+        .figure:hover svg {
+            transform: scale(1.05);
+        }
+
+        /* Jumping Buttons */
+        .figure-btn {
+            position: absolute;
+            top: -60px;
+            background: linear-gradient(135deg, var(--primary), #059669);
+            color: #050b14;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 800;
+            text-decoration: none;
+            white-space: nowrap;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            border: 2px solid #fff;
+            transition: all 0.3s;
+            cursor: pointer;
+            z-index: 15;
+        }
+
+        .figure-btn:hover {
+            background: #fff;
+            color: var(--primary);
+            box-shadow: 0 10px 30px rgba(255, 255, 255, 0.5);
+            transform: scale(1.1) !important;
+        }
+
+        @keyframes popJump {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .btn-jump {
+            animation: popJump 1.5s infinite ease-in-out;
+        }
+
+        .delay-1 { animation-delay: 0s; }
+        .delay-2 { animation-delay: 0.5s; }
+        .delay-3 { animation-delay: 1s; }
+
+        /* Truck Enhancements */
+        .truck-speech-bubble {
+            position: absolute;
+            top: -30px;
+            left: 200px;
+            background: #fff;
+            color: #050b14;
+            padding: 8px 15px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 800;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            border: 2px solid var(--primary);
+            animation: bounceSpeech 2s infinite ease-in-out;
+            z-index: 25;
+        }
+
+        .truck-speech-bubble::after {
             content: '';
+            position: absolute;
+            bottom: -7px;
+            left: 20px;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-right: 2px solid var(--primary);
+            border-bottom: 2px solid var(--primary);
+            transform: rotate(45deg);
+        }
+
+        @keyframes bounceSpeech {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        #waving-arm {
+            transform-origin: 255px 102px;
+            animation: waveArm 0.5s infinite alternate ease-in-out;
+        }
+
+        @keyframes waveArm {
+            0% { transform: rotate(-10deg); }
+            100% { transform: rotate(50deg); }
+        }
+
+        /* MCD Truck */
+        .truck-container {
+            position: absolute;
+            bottom: 5vh; /* Firmly on the road */
+            left: -400px;
+            width: 320px;
+            height: 160px;
+            z-index: 20;
+        }
+
+        .truck-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(10px 20px 15px rgba(0,0,0,0.5));
+        }
+
+        /* UI Header */
+        .ui-layer {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, transparent, var(--primary), transparent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .card:hover::before {
-            opacity: 1;
-        }
-
-        .card-icon {
-            font-size: 3rem;
-            margin-bottom: 1.5rem;
-            background: rgba(16, 185, 129, 0.1);
-            width: 80px;
-            height: 80px;
+            height: 100%;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            transition: transform 0.3s ease;
+            justify-content: flex-start;
+            padding-top: 5vh;
+            z-index: 50;
+            pointer-events: none; 
         }
 
-        .card:hover .card-icon {
-            transform: scale(1.1) rotate(5deg);
+        .header {
+            text-align: center;
+            pointer-events: auto;
+            background: rgba(15, 23, 42, 0.7);
+            padding: 20px 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
-        .card-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
+        .header h1 {
+            font-size: 5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            letter-spacing: -2px;
         }
 
-        .card-desc {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            line-height: 1.5;
+        .header p {
+            font-size: 1.3rem;
+            color: #e2e8f0;
+            max-width: 600px;
+            margin: 0 auto;
         }
 
-        .card-btn {
-            margin-top: 1.5rem;
-            display: inline-block;
-            padding: 0.75rem 1.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.2s;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .card:hover .card-btn {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2.5rem;
-            }
-            .cards-grid {
-                grid-template-columns: 1fr;
-                max-width: 400px;
-                margin-left: auto;
-                margin-right: auto;
-            }
+        @media (max-width: 900px) {
+            .header h1 { font-size: 3rem; }
+            .figure { bottom: 35vh; width: 80px; }
+            .figure-btn { font-size: 0.8rem; padding: 8px 15px; }
+            .truck-container { width: 220px; bottom: 8vh; }
+            .header { padding: 10px 20px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Swachhgram Portal</h1>
-        <p class="subtitle">Welcome to the centralized management system for community cleanliness and waste management.</p>
-        
-        <div class="cards-grid">
-            <!-- Citizen App -->
-            <a href="./citizen-app/" class="card">
-                <div class="card-icon">🧑‍🤝‍🧑</div>
-                <div class="card-title">Citizen App</div>
-                <div class="card-desc">Report issues, schedule pickups, and participate in community cleanliness drives.</div>
-                <div class="card-btn">Launch App</div>
-            </a>
 
-            <!-- Admin Dashboard -->
-            <a href="./admin-dashboard/" class="card">
-                <div class="card-icon">👨‍💼</div>
-                <div class="card-title">Admin Dashboard</div>
-                <div class="card-desc">Monitor operations, analyze metrics, and manage city-wide waste collection logistics.</div>
-                <div class="card-btn">Go to Dashboard</div>
-            </a>
+    <!-- Sky and Sun/Moon -->
+    <div class="sky" id="sky"></div>
+    <div class="celestial-body" id="celestial"></div>
 
-            <!-- Crew App -->
-            <a href="./crew-app/" class="card">
-                <div class="card-icon">👷</div>
-                <div class="card-title">Crew App</div>
-                <div class="card-desc">View assigned routes, update task statuses, and navigate to collection points.</div>
-                <div class="card-btn">Open Crew Portal</div>
-            </a>
+    <!-- City Skyline -->
+    <div class="skyline-container">
+        <svg class="skyline-svg" viewBox="0 0 2000 400" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+            <path class="skyline-building" d="M0 400 V200 H100 V100 H150 V180 H250 V50 H300 V150 H450 V250 H500 V120 H600 V300 H700 V80 H800 V200 H900 V150 H1050 V300 H1100 V100 H1200 V220 H1350 V180 H1400 V50 H1500 V250 H1600 V120 H1700 V200 H1800 V150 H1900 V80 H1950 V300 H2000 V400 Z" />
+        </svg>
+    </div>
+
+    <!-- Sidewalk -->
+    <div class="sidewalk"></div>
+
+    <!-- Road -->
+    <div class="road">
+        <div class="road-lines"></div>
+    </div>
+
+    <!-- Figures on Sidewalk -->
+    <div class="figure" style="left: 15%;" id="fig-citizen">
+        <a href="./citizen-app/" class="figure-btn btn-jump delay-1">Enter Citizen Portal</a>
+        <svg viewBox="0 0 100 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="40" r="25" fill="#fca5a5" />
+            <rect x="35" y="70" width="30" height="70" rx="15" fill="#60a5fa" />
+            <rect x="40" y="130" width="8" height="60" rx="4" fill="#1e3a8a" />
+            <rect x="52" y="130" width="8" height="60" rx="4" fill="#1e3a8a" />
+        </svg>
+    </div>
+
+    <div class="figure" style="left: 50%; transform: translateX(-50%);" id="fig-crew">
+        <a href="./crew-app/" class="figure-btn btn-jump delay-2">Enter Crew Portal</a>
+        <svg viewBox="0 0 100 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M25 40 Q50 10 75 40" fill="#facc15" />
+            <circle cx="50" cy="45" r="20" fill="#fcd34d" />
+            <rect x="30" y="70" width="40" height="70" rx="10" fill="#f97316" />
+            <rect x="35" y="80" width="10" height="60" fill="#fbbf24" />
+            <rect x="55" y="80" width="10" height="60" fill="#fbbf24" />
+            <rect x="40" y="130" width="8" height="60" rx="4" fill="#334155" />
+            <rect x="52" y="130" width="8" height="60" rx="4" fill="#334155" />
+        </svg>
+    </div>
+
+    <div class="figure" style="left: 85%; transform: translateX(-100%);" id="fig-admin">
+        <a href="./admin-dashboard/" class="figure-btn btn-jump delay-3">Enter Admin Dashboard</a>
+        <svg viewBox="0 0 100 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="40" r="25" fill="#fdba74" />
+            <rect x="30" y="70" width="40" height="70" rx="10" fill="#1e293b" />
+            <path d="M48 70 L52 70 L50 110 Z" fill="#ef4444" />
+            <rect x="40" y="130" width="8" height="60" rx="4" fill="#0f172a" />
+            <rect x="52" y="130" width="8" height="60" rx="4" fill="#0f172a" />
+        </svg>
+    </div>
+
+    <!-- MCD Truck on Road -->
+    <div class="truck-container" id="mcd-truck">
+        <div class="truck-speech-bubble">We are for you only! 👋</div>
+        <svg viewBox="0 0 400 200" fill="none" xmlns="http://www.w3.org/2000/svg" class="truck-svg">
+            <!-- Headlight Beam (Gradient) -->
+            <defs>
+                <linearGradient id="beam-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#fef08a" stop-opacity="0.6"/>
+                    <stop offset="100%" stop-color="#fef08a" stop-opacity="0"/>
+                </linearGradient>
+            </defs>
+            <path d="M 295 135 L 500 80 L 500 190 Z" fill="url(#beam-gradient)" />
+
+            <path d="M40 40 H 220 V 160 H 40 Z" fill="#10b981" />
+            <rect x="40" y="80" width="180" height="20" fill="#059669" />
+            <path d="M 230 70 L 260 70 L 300 110 L 300 160 L 230 160 Z" fill="#e2e8f0" />
+            
+            <!-- Window Background (Dark) -->
+            <path d="M 235 75 L 255 75 L 285 110 L 235 110 Z" fill="#0f172a" />
+            
+            <!-- Driver -->
+            <g id="driver">
+                <!-- Head -->
+                <circle cx="250" cy="90" r="10" fill="#facc15" />
+                <!-- Body (Orange Vest) -->
+                <rect x="240" y="100" width="20" height="10" fill="#f97316" />
+                <!-- Waving Arm -->
+                <path id="waving-arm" d="M 255 102 Q 280 85 270 70" stroke="#facc15" stroke-width="4" stroke-linecap="round" fill="none" />
+            </g>
+
+            <!-- Window Reflection (Glass overlay) -->
+            <path d="M 235 75 L 255 75 L 285 110 L 235 110 Z" fill="#38bdf8" opacity="0.4" />
+            <path d="M 245 75 L 255 75 L 270 95 L 260 95 Z" fill="#ffffff" opacity="0.3" /> <!-- Shiny glare -->
+
+            <!-- Headlight Bulb -->
+            <path d="M 290 130 Q 300 135 290 140 Z" fill="#facc15" />
+
+            <!-- Wheels -->
+            <circle cx="90" cy="160" r="25" fill="#1e293b" />
+            <circle cx="90" cy="160" r="12" fill="#94a3b8" />
+            <circle cx="260" cy="160" r="25" fill="#1e293b" />
+            <circle cx="260" cy="160" r="12" fill="#94a3b8" />
+            <text x="50" y="120" font-family="Outfit" font-size="20" font-weight="800" fill="#ffffff">MCD SWACHH</text>
+        </svg>
+    </div>
+
+    <!-- Header UI -->
+    <div class="ui-layer">
+        <div class="header">
+            <h1>SwachhCity</h1>
+            <p>Smart Municipal Waste Management System.</p>
         </div>
     </div>
+
+    <!-- GSAP library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Animate Header
+            gsap.from(".header h1", { y: -50, opacity: 0, duration: 1, ease: "power3.out" });
+            gsap.from(".header p", { y: -30, opacity: 0, duration: 1, delay: 0.2, ease: "power3.out" });
+            
+            // Animate Figures entering
+            gsap.from(".figure", {
+                y: 100,
+                opacity: 0,
+                duration: 1,
+                stagger: 0.2,
+                ease: "back.out(1.5)",
+                delay: 0.4
+            });
+
+            // Road Lines Animation (moving road effect)
+            gsap.to(".road-lines", {
+                x: "-100px",
+                duration: 1.5,
+                repeat: -1,
+                ease: "linear"
+            });
+
+            // Skyline Parallax (Moves slowly to give depth)
+            gsap.to(".skyline-svg", {
+                x: "-1000px",
+                duration: 60,
+                repeat: -1,
+                ease: "linear"
+            });
+
+            // Day / Night Cycle (Sky, Sun/Moon, Buildings)
+            const cycle = gsap.timeline({ repeat: -1 });
+
+            // Starts at Day (0s)
+            cycle.to("#celestial", { y: 600, duration: 10, ease: "power1.inOut" }, 0) // Sun goes down
+                 .to("#sky", { backgroundColor: "#1e1b4b", duration: 5 }, 5) // Sky turns dark
+                 .to(".skyline-building", { fill: "#0f172a", duration: 5 }, 5) // Buildings go dark
+                 
+                 // Night time (10s)
+                 .set("#celestial", { backgroundColor: "#e2e8f0", boxShadow: "0 0 50px rgba(226, 232, 240, 0.8)" }) // Becomes Moon
+                 .to("#celestial", { y: 0, duration: 10, ease: "power1.inOut" }, 10) // Moon comes up
+                 
+                 // Moon goes down (20s)
+                 .to("#celestial", { y: 600, duration: 10, ease: "power1.inOut" }, 20)
+                 .to("#sky", { backgroundColor: "#87CEEB", duration: 5 }, 25) // Sky turns light
+                 .to(".skyline-building", { fill: "#64748b", duration: 5 }, 25) // Buildings go light
+                 
+                 // Day time again (30s)
+                 .set("#celestial", { backgroundColor: "#facc15", boxShadow: "0 0 50px rgba(250, 204, 21, 0.5)" }) // Becomes Sun
+                 .to("#celestial", { y: 0, duration: 10, ease: "power1.inOut" }, 30); // Sun comes up
+
+            // Truck Infinite Loop Animation
+            const truck = document.getElementById('mcd-truck');
+            
+            // Loop from completely left off-screen to completely right off-screen
+            gsap.fromTo(truck, 
+                { x: -500 },
+                {
+                    x: window.innerWidth + 500,
+                    duration: 12,
+                    ease: "none",
+                    repeat: -1
+                }
+            );
+
+            // Truck bounce effect (driving on road)
+            gsap.to(truck, {
+                y: "-=5",
+                duration: 0.15,
+                yoyo: true,
+                repeat: -1,
+                ease: "sine.inOut"
+            });
+            
+            // Note: Mouse parallax has been completely removed to keep the road fixed as requested.
+        });
+    </script>
 </body>
 </html>

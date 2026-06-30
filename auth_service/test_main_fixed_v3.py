@@ -44,6 +44,12 @@ class LoginRequest(BaseModel):
 class LogoutRequest(BaseModel):
     token: str = None
 
+class RegisterRequest(BaseModel):
+    name: str
+    username: str
+    password: str
+    role: str
+
 # User database with username/password
 users_db = {
     "admin": {
@@ -166,6 +172,30 @@ async def login(login_request: LoginRequest):
             "last_login": user["last_login"]
         }
     }
+
+@app.post("/auth/register")
+async def register(register_request: RegisterRequest):
+    """Register a new user."""
+    username = register_request.username
+    if username in users_db:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already exists"
+        )
+    
+    new_user = {
+        "id": str(uuid.uuid4()),
+        "username": username,
+        "password": hashlib.sha256(register_request.password.encode()).hexdigest(),
+        "role": register_request.role,
+        "name": register_request.name,
+        "is_active": True,
+        "created_at": datetime.utcnow()
+    }
+    
+    users_db[username] = new_user
+    logger.info(f"User {username} registered successfully")
+    return {"success": True, "message": "Registered successfully"}
 
 @app.post("/auth/logout")
 async def logout(logout_request: LogoutRequest):
