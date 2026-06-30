@@ -20,7 +20,7 @@
       }
       
       .navbar {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        background: linear-gradient(135deg, #1e293b, #0f172a);
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       }
       
@@ -47,7 +47,7 @@
       }
       
       .btn-primary {
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        background: linear-gradient(135deg, #1e293b, #0f172a);
         border: none;
         border-radius: 6px;
         padding: 10px 20px;
@@ -304,7 +304,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        background: linear-gradient(135deg, #1e293b, #0f172a);
       }
       
       .login-card {
@@ -343,6 +343,7 @@
         .metric-card h3 { font-size: 1.5rem; }
       }
     </style>
+      <script src="../config.js"></script>
   </head>
   <body>
         <!-- Login/Register Screen -->
@@ -372,7 +373,7 @@
           </button>
           
           <div class="text-center mt-3">
-            <a href="#" id="showRegisterBtn" style="text-decoration: none;">Don't have an account? Register here</a>
+            <button type="button" class="btn btn-outline-primary w-100" id="showRegisterBtn">Don't have an account? Register here</button>
           </div>
         </form>
 
@@ -389,13 +390,18 @@
             <label for="regPassword" class="form-label">Password</label>
             <input type="password" class="form-control" id="regPassword" placeholder="Create a password" required>
           </div>
-          <button type="submit" class="btn btn-success w-100" id="registerBtn">
+          <button type="submit" class="btn btn-dark w-100" id="registerBtn">
             <span id="registerBtnText">Register</span>
           </button>
           <div class="text-center mt-3">
-            <a href="#" id="showLoginBtn" style="text-decoration: none;">Already have an account? Login</a>
+            <button type="button" class="btn btn-outline-success w-100" id="showLoginBtn">Already have an account? Login</button>
           </div>
         </form>
+        <div class="text-center mt-4 border-top pt-3">
+          <a href="../index.html" class="text-muted" style="text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#000'" onmouseout="this.style.color=''">
+            ← Back to Main Website
+          </a>
+        </div>
       </div>
     </div>
 
@@ -407,10 +413,15 @@
           <a class="navbar-brand" href="#">
             SwachhCity - Municipal Dashboard
           </a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="adminNavbar">
           
           <div class="navbar-nav ms-auto">
             <div class="real-time-indicator me-3">
               <div class="pulse"></div>
+          </div>
               Live
             </div>
             <a class="nav-link text-white" href="#" onclick="showSection('overview')">Overview</a>
@@ -435,7 +446,7 @@
           
           <!-- Metrics Cards -->
           <div class="row mb-4">
-            <div class="col-md-3 mb-3">
+            <div class="col-sm-6 col-md-3 mb-3">
               <div class="metric-card incidents">
                 <div class="metrics-number" id="totalIncidents">0</div>
                 <div class="metrics-label">Total Incidents</div>
@@ -443,7 +454,7 @@
               </div>
             </div>
             
-            <div class="col-md-3 mb-3">
+            <div class="col-sm-6 col-md-3 mb-3">
               <div class="metric-card collections">
                 <div class="metrics-number" id="totalCollections">0</div>
                 <div class="metrics-label">Collections</div>
@@ -451,7 +462,7 @@
               </div>
             </div>
             
-            <div class="col-md-3 mb-3">
+            <div class="col-sm-6 col-md-3 mb-3">
               <div class="metric-card crew">
                 <div class="metrics-number" id="activeCrew">0</div>
                 <div class="metrics-label">Active Crew</div>
@@ -459,7 +470,7 @@
               </div>
             </div>
             
-            <div class="col-md-3 mb-3">
+            <div class="col-sm-6 col-md-3 mb-3">
               <div class="metric-card sla">
                 <div class="metrics-number" id="slaCompliance">0%</div>
                 <div class="metrics-label">SLA Compliance</div>
@@ -470,7 +481,7 @@
 
           <!-- Live Map and Activity -->
           <div class="row">
-            <div class="col-md-8 mb-4">
+            <div class="col-lg-8 col-md-12 mb-4 mb-4">
               <div class="card">
                 <div class="card-body">
                   <h5 class="card-title">Live Operations Map</h5>
@@ -479,7 +490,7 @@
               </div>
             </div>
             
-            <div class="col-md-4 mb-4">
+            <div class="col-lg-4 col-md-12 mb-4">
               <div class="card">
                 <div class="card-body">
                   <h5 class="card-title">Recent Activity</h5>
@@ -537,7 +548,7 @@
               <div class="card">
                 <div class="card-body">
                   <div class="row">
-                    <div class="col-md-8">
+                    <div class="col-lg-8 col-md-12 mb-4">
                       <h5 class="card-title">Actions</h5>
                       <button class="btn btn-primary me-2" onclick="refreshIncidents()">
                         Refresh Incidents
@@ -549,7 +560,7 @@
                         Test Incidents Direct
                       </button>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-lg-4 col-md-12">
                       <h5 class="card-title">Quick Stats</h5>
                       <div class="d-flex justify-content-between">
                         <small class="text-muted">Total: <strong id="quickTotal">0</strong></small>
@@ -673,7 +684,7 @@
                   </p>
                   <div class="mt-4">
                     <div class="row">
-                      <div class="col-md-3 mb-3">
+                      <div class="col-sm-6 col-md-3 mb-3">
                         <div class="card border-light">
                           <div class="card-body">
                             <h6>📈 Performance Metrics</h6>
@@ -681,7 +692,7 @@
                           </div>
                         </div>
                       </div>
-                      <div class="col-md-3 mb-3">
+                      <div class="col-sm-6 col-md-3 mb-3">
                         <div class="card border-light">
                           <div class="card-body">
                             <h6>📊 Incident Analytics</h6>
@@ -689,7 +700,7 @@
                           </div>
                         </div>
                       </div>
-                      <div class="col-md-3 mb-3">
+                      <div class="col-sm-6 col-md-3 mb-3">
                         <div class="card border-light">
                           <div class="card-body">
                             <h6>🎯 SLA Reports</h6>
@@ -697,7 +708,7 @@
                           </div>
                         </div>
                       </div>
-                      <div class="col-md-3 mb-3">
+                      <div class="col-sm-6 col-md-3 mb-3">
                         <div class="card border-light">
                           <div class="card-body">
                             <h6>📋 Custom Reports</h6>
@@ -821,10 +832,7 @@
     
     <script>
       // Service URLs
-      const SERVICES = {
-        SHARED_DATA: 'http://localhost:8006',
-        AUTH: 'http://localhost:8005'
-      };
+      // SERVICES configuration moved to config.js
 
       // Global variables
       let currentUser = null;
@@ -907,6 +915,65 @@
       }
 
       // Handle login
+            // Handle Registration
+      async function handleRegister(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('regName').value;
+        const username = document.getElementById('regUsername').value;
+        const password = document.getElementById('regPassword').value;
+        const btn = document.getElementById('registerBtn');
+        const btnText = document.getElementById('registerBtnText');
+        const flashMsg = document.getElementById('flashMessage');
+        
+        // Disable button and show loading
+        btn.disabled = true;
+        btnText.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Registering...';
+        
+        try {
+          const response = await fetch('http://localhost:8005/auth/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: name,
+              username: username,
+              password: password,
+              role: 'admin'
+            }),
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok) {
+            // Show flash message
+            flashMsg.className = "alert alert-success";
+            flashMsg.innerHTML = `<strong>Success!</strong> You can now login.<br>ID: ${username}<br>Password: ${password}`;
+            flashMsg.style.display = "block";
+            
+            // Switch back to login form
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            
+            // Pre-fill login form
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = password;
+          } else {
+            alert(`Registration failed: ${data.detail || 'Unknown error'}`);
+          }
+        } catch (error) {
+          console.error('Registration error:', error);
+          alert('Failed to connect to authentication server. Please ensure it is running.');
+        } finally {
+          // Re-enable button
+          btn.disabled = false;
+          btnText.innerText = 'Register';
+        }
+      }
+
+      // Handle Login
+            // Handle Login
       async function handleLogin(event) {
         event.preventDefault();
         
@@ -920,28 +987,44 @@
         loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...';
 
         try {
-          // For demo, we'll use simple authentication
-          if ((username === 'admin' && password === 'admin123') || 
-              (username === 'supervisor' && password === 'sup123')) {
-            currentUser = {
-              id: username === 'admin' ? 'admin-001' : 'supervisor-001',
+          const response = await fetch('http://localhost:8005/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
               username: username,
-              name: username === 'admin' ? 'System Administrator' : 'Ward Supervisor',
-              role: username === 'admin' ? 'admin' : 'ward_supervisor'
-            };
-            authToken = 'demo-token';
+              password: password
+            }),
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            currentUser = data.user;
+            authToken = data.access_token;
+            
+            if (currentUser.role !== 'admin') {
+                showAlert(`Access Denied: This portal is for ${'admin'}s.`, 'danger');
+                return;
+            }
             
             localStorage.setItem('swachhgram_token', authToken);
             localStorage.setItem('swachhgram_user', JSON.stringify(currentUser));
             
-            showMainApp();
-            showAlert('Login successful!', 'success');
+            if (typeof showMainApp === 'function') showMainApp();
+            if (typeof loadDashboardData === 'function') loadDashboardData();
+            
+            if (typeof showAlert === 'function') showAlert('Login successful!', 'success');
+            else alert('Login successful!');
           } else {
-            showAlert('Invalid credentials. Use: admin/admin123 or supervisor/sup123', 'danger');
+            const errorData = await response.json();
+            if (typeof showAlert === 'function') showAlert(`Login failed: ${errorData.detail || 'Invalid credentials'}`, 'danger');
+            else alert(`Login failed: ${errorData.detail || 'Invalid credentials'}`);
           }
         } catch (error) {
           console.error('Login error:', error);
-          showAlert('Login failed. Please try again.', 'danger');
+          if (typeof showAlert === 'function') showAlert('Login failed. Please try again.', 'danger');
+          else alert('Login failed. Please try again.');
         } finally {
           loginBtn.disabled = false;
           loginBtn.textContent = originalText;
@@ -1016,9 +1099,10 @@
 
       // Load recent activity
       function loadRecentActivity() {
+        const firstIncidentId = allIncidents && allIncidents.length > 0 ? allIncidents[0].id : 'INC-001';
         const activities = [
-          { type: 'incident', action: 'New incident reported', id: allIncidents[0]?.id || 'INC-001', time: '2 minutes ago', priority: 'urgent' },
-          { type: 'assignment', action: 'Incident assigned to crew', id: allIncidents[0]?.id || 'INC-001', crew: 'Crew-001', time: '5 minutes ago' },
+          { type: 'incident', action: 'New incident reported', id: firstIncidentId, time: '2 minutes ago', priority: 'urgent' },
+          { type: 'assignment', action: 'Incident assigned to crew', id: firstIncidentId, crew: 'Crew-001', time: '5 minutes ago' },
           { type: 'collection', action: 'Collection completed', id: 'COL-015', crew: 'Crew-002', time: '8 minutes ago' },
           { type: 'incident', action: 'Incident resolved', id: 'INC-022', time: '12 minutes ago' },
           { type: 'assignment', action: 'Crew status updated', crew: 'Crew-003', status: 'Available', time: '15 minutes ago' }
@@ -1105,7 +1189,7 @@
                       </small>
                       ${incident.assigned_to ? `<br><small class="text-muted"><i class="bi bi-person"></i> Assigned to: ${incident.assigned_to}</small>` : ''}
                     </div>
-                    <div class="col-md-4 text-end">
+                    <div class="col-lg-4 col-md-12 text-end">
                       <div class="btn-group-vertical" role="group">
                         <button class="btn btn-sm btn-primary mb-2" onclick="assignIncident('${incident.id}')">
                           ${incident.assigned_to ? 'Reassign' : 'Assign'}
@@ -1162,7 +1246,7 @@
               <div class="card crew-card mb-3">
                 <div class="card-body">
                   <div class="row align-items-center">
-                    <div class="col-md-8">
+                    <div class="col-lg-8 col-md-12 mb-4">
                       <h5 class="card-title">${member.name}</h5>
                       <div class="d-flex gap-2 mb-2">
                         <span class="crew-status crew-${member.status}">${member.status}</span>
@@ -1174,7 +1258,7 @@
                         <i class="bi bi-clock"></i> ${new Date(member.last_location_update).toLocaleString()}
                       </small>
                     </div>
-                    <div class="col-md-4 text-end">
+                    <div class="col-lg-4 col-md-12 text-end">
                       <div class="btn-group-vertical" role="group">
                         <button class="btn btn-sm btn-primary mb-2" onclick="viewCrewDetails('${member.id}')">
                           View Details

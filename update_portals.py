@@ -168,7 +168,7 @@ for filepath in files_to_update:
     
     # 3. Replace JS handleLogin to include handleRegister
     custom_js = js_replacement.replace("ROLE_NAME", f"'{role_name}'")
-    content = content.replace("async function handleLogin(e) {", custom_js)
+    content = content.replace("async function handleLogin(event) {", custom_js.replace("async function handleLogin(e) {", "async function handleLogin(event) {"))
     
     # 4. Add event listeners
     content = content.replace("document.getElementById('loginForm').addEventListener('submit', handleLogin);", init_replacement)

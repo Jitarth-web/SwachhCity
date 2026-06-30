@@ -255,6 +255,7 @@
         .map-container { height: 250px; }
       }
     </style>
+      <script src="../config.js"></script>
   </head>
   <body>
         <!-- Login/Register Screen -->
@@ -284,7 +285,7 @@
           </button>
           
           <div class="text-center mt-3">
-            <a href="#" id="showRegisterBtn" style="text-decoration: none;">Don't have an account? Register here</a>
+            <button type="button" class="btn btn-outline-primary w-100" id="showRegisterBtn">Don't have an account? Register here</button>
           </div>
         </form>
 
@@ -305,9 +306,14 @@
             <span id="registerBtnText">Register</span>
           </button>
           <div class="text-center mt-3">
-            <a href="#" id="showLoginBtn" style="text-decoration: none;">Already have an account? Login</a>
+            <button type="button" class="btn btn-outline-success w-100" id="showLoginBtn">Already have an account? Login</button>
           </div>
         </form>
+        <div class="text-center mt-4 border-top pt-3">
+          <a href="http://localhost:3000/" class="text-muted" style="text-decoration: none; font-size: 0.9rem; transition: color 0.2s;" onmouseover="this.style.color='#000'" onmouseout="this.style.color=''">
+            ← Back to Main Website
+          </a>
+        </div>
       </div>
     </div>
 
@@ -520,11 +526,7 @@
     
     <script>
       // Service URLs
-      const SERVICES = {
-        SHARED_DATA: 'http://localhost:8006',
-        AUTH: 'http://localhost:8005',
-        AI: 'http://localhost:8007'
-      };
+      // SERVICES configuration moved to config.js
 
       // Global variables
       let currentUser = null;
@@ -611,6 +613,65 @@
       }
 
       // Handle login
+            // Handle Registration
+      async function handleRegister(e) {
+        e.preventDefault();
+        
+        const name = document.getElementById('regName').value;
+        const username = document.getElementById('regUsername').value;
+        const password = document.getElementById('regPassword').value;
+        const btn = document.getElementById('registerBtn');
+        const btnText = document.getElementById('registerBtnText');
+        const flashMsg = document.getElementById('flashMessage');
+        
+        // Disable button and show loading
+        btn.disabled = true;
+        btnText.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Registering...';
+        
+        try {
+          const response = await fetch('http://localhost:8005/auth/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: name,
+              username: username,
+              password: password,
+              role: 'citizen'
+            }),
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok) {
+            // Show flash message
+            flashMsg.className = "alert alert-success";
+            flashMsg.innerHTML = `<strong>Success!</strong> You can now login.<br>ID: ${username}<br>Password: ${password}`;
+            flashMsg.style.display = "block";
+            
+            // Switch back to login form
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            
+            // Pre-fill login form
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = password;
+          } else {
+            alert(`Registration failed: ${data.detail || 'Unknown error'}`);
+          }
+        } catch (error) {
+          console.error('Registration error:', error);
+          alert('Failed to connect to authentication server. Please ensure it is running.');
+        } finally {
+          // Re-enable button
+          btn.disabled = false;
+          btnText.innerText = 'Register';
+        }
+      }
+
+      // Handle Login
+            // Handle Login
       async function handleLogin(event) {
         event.preventDefault();
         
@@ -624,27 +685,44 @@
         loginBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Logging in...';
 
         try {
-          // For demo, we'll use simple authentication
-          if (username === 'citizen' && password === 'cit123') {
-            currentUser = {
-              id: 'citizen-001',
-              username: 'citizen',
-              name: 'Citizen User',
-              role: 'citizen'
-            };
-            authToken = 'demo-token';
+          const response = await fetch('http://localhost:8005/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              username: username,
+              password: password
+            }),
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            currentUser = data.user;
+            authToken = data.access_token;
+            
+            if (currentUser.role !== 'citizen') {
+                showAlert(`Access Denied: This portal is for ${'citizen'}s.`, 'danger');
+                return;
+            }
             
             localStorage.setItem('swachhgram_token', authToken);
             localStorage.setItem('swachhgram_user', JSON.stringify(currentUser));
             
-            showMainApp();
-            showAlert('Login successful!', 'success');
+            if (typeof showMainApp === 'function') showMainApp();
+            if (typeof loadDashboardData === 'function') loadDashboardData();
+            
+            if (typeof showAlert === 'function') showAlert('Login successful!', 'success');
+            else alert('Login successful!');
           } else {
-            showAlert('Invalid credentials. Use: citizen / cit123', 'danger');
+            const errorData = await response.json();
+            if (typeof showAlert === 'function') showAlert(`Login failed: ${errorData.detail || 'Invalid credentials'}`, 'danger');
+            else alert(`Login failed: ${errorData.detail || 'Invalid credentials'}`);
           }
         } catch (error) {
           console.error('Login error:', error);
-          showAlert('Login failed. Please try again.', 'danger');
+          if (typeof showAlert === 'function') showAlert('Login failed. Please try again.', 'danger');
+          else alert('Login failed. Please try again.');
         } finally {
           loginBtn.disabled = false;
           loginBtn.textContent = originalText;
