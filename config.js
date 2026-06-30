@@ -1,5 +1,5 @@
 // SwachhGram Global Configuration
 const SERVICES = {
-  AUTH: 'http://localhost:8005/auth',
-  SHARED_DATA: 'http://localhost:8006'
+  AUTH: 'https://swachhcity-3.onrender.com/auth',
+  SHARED_DATA: 'https://swachhcity-1.onrender.com'
 };
